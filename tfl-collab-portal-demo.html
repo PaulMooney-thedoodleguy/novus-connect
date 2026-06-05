@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TfL Collaboration Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<style>
+:root {
+  --pri:#003688; --pri-dark:#002a6e; --pri-light:#e8edf7;
+  --acc:#DC241F; --surf:#fff; --bg:#F5F5F5;
+  --on-surf:#212121; --sec:#757575; --div:#E0E0E0; --err:#B00020;
+  --s1:0 1px 3px rgba(0,0,0,.12),0 1px 2px rgba(0,0,0,.24);
+  --s2:0 3px 6px rgba(0,0,0,.15),0 2px 4px rgba(0,0,0,.12);
+  --s4:0 10px 20px rgba(0,0,0,.15),0 3px 6px rgba(0,0,0,.10);
+  --s8:0 15px 25px rgba(0,0,0,.15),0 5px 10px rgba(0,0,0,.05);
+  --bar:64px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Roboto',sans-serif;font-size:14px;color:var(--on-surf);background:var(--bg);-webkit-font-smoothing:antialiased}
+.screen{display:none;min-height:100vh;flex-direction:column}
+.screen.active{display:flex}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:36px;padding:0 16px;border:none;border-radius:4px;font-family:'Roboto',sans-serif;font-size:14px;font-weight:500;letter-spacing:.089em;text-transform:uppercase;cursor:pointer;transition:box-shadow .2s,background .2s;white-space:nowrap;position:relative;overflow:hidden}
+.btn .material-icons{font-size:18px}
+.btn-p{background:var(--pri);color:#fff;box-shadow:var(--s1)}.btn-p:hover{background:var(--pri-dark);box-shadow:var(--s2)}
+.btn-a{background:var(--acc);color:#fff;box-shadow:var(--s1)}.btn-a:hover{background:#b81c19;box-shadow:var(--s2)}
+.btn-o{background:transparent;color:var(--pri);border:1px solid rgba(0,54,136,.5)}.btn-o:hover{background:rgba(0,54,136,.04)}
+.btn-t{background:transparent;color:var(--pri);box-shadow:none;padding:0 8px}.btn-t:hover{background:rgba(0,54,136,.06)}
+.btn-danger{background:transparent;color:var(--err);box-shadow:none;padding:0 8px;border:1px solid rgba(176,0,32,.4)}.btn-danger:hover{background:rgba(176,0,32,.06)}
+.btn-sm{height:30px;padding:0 12px;font-size:13px}
+
+/* ── TEXT FIELDS ── */
+.tf{position:relative;margin-bottom:20px}
+.tf label{position:absolute;top:50%;left:13px;transform:translateY(-50%);font-size:14px;color:var(--sec);pointer-events:none;transition:all .15s;padding:0 3px;background:transparent}
+.tf textarea~label{top:16px;transform:none}
+.tf input,.tf select,.tf textarea{width:100%;border:1px solid rgba(0,0,0,.38);border-radius:4px;padding:16px 13px 8px;font-family:'Roboto',sans-serif;font-size:14px;color:var(--on-surf);background:transparent;outline:none;transition:border-color .2s;-webkit-appearance:none}
+.tf textarea{min-height:82px;resize:vertical}
+.tf select{cursor:pointer;background:#fff}
+.tf input:focus,.tf select:focus,.tf textarea:focus{border-color:var(--pri);border-width:2px;padding:15px 12px 7px}
+.tf input:focus~label,.tf input:not(:placeholder-shown)~label,
+.tf select:focus~label,.tf textarea:focus~label,
+.tf textarea:not(:placeholder-shown)~label,.tf.fl label{top:4px;font-size:11px;color:var(--pri);background:#fff;transform:none}
+.tf select~label{top:4px;font-size:11px;color:var(--sec);background:#fff;transform:none}
+.tf input:focus~label,.tf select:focus~label,.tf textarea:focus~label{color:var(--pri)}
+.tf input[readonly]{background:#fafafa;color:var(--sec)}
+
+/* ── CARD ── */
+.card{background:var(--surf);border-radius:4px;box-shadow:var(--s1);overflow:hidden;margin-bottom:24px}
+.card-hd{padding:16px 24px;display:flex;align-items:center;justify-content:space-between;min-height:64px;border-bottom:1px solid var(--div)}
+.card-title{font-size:20px;font-weight:500;display:flex;align-items:center;gap:10px}
+.card-sub{font-size:12px;color:var(--sec);margin-top:3px}
+.chip{display:inline-flex;align-items:center;height:24px;padding:0 10px;border-radius:12px;font-size:12px;font-weight:500;background:var(--pri-light);color:var(--pri)}
+
+/* ── STATUS CHIPS ── */
+.sc{display:inline-flex;align-items:center;gap:5px;height:24px;padding:0 10px;border-radius:12px;font-size:12px;font-weight:500;white-space:nowrap}
+.sc::before{content:'';width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.sc-pending{background:#FFF8E1;color:#E65100}.sc-pending::before{background:#FFB300}
+.sc-complete{background:#E8F5E9;color:#2E7D32}.sc-complete::before{background:#43A047}
+.sc-deleted{background:#FAFAFA;color:#757575}.sc-deleted::before{background:#BDBDBD}
+.sc-failed{background:#FFEBEE;color:#C62828}.sc-failed::before{background:#EF5350}
+.sc-waiting{background:#FFF8E1;color:#E65100}.sc-waiting::before{background:#FFB300}
+.sc-validated{background:#E8F5E9;color:#2E7D32}.sc-validated::before{background:#43A047}
+.sc-validating{background:#E3F2FD;color:#1565C0}.sc-validating::before{background:#1E88E5}
+.sc-abandoned{background:#FAFAFA;color:#757575}.sc-abandoned::before{background:#BDBDBD}
+
+/* ── TABLE ── */
+.data-table{width:100%;border-collapse:collapse;font-size:13px}
+.data-table thead tr{border-bottom:2px solid var(--div)}
+.data-table thead th{padding:14px 24px;text-align:left;font-size:12px;font-weight:500;color:var(--sec);letter-spacing:.02em;white-space:nowrap;cursor:pointer;user-select:none}
+.data-table thead th:hover{color:var(--on-surf)}
+.thi{display:inline-flex;align-items:center;gap:3px}
+.si{font-size:16px;opacity:.35;transition:opacity .15s}
+.si.active{opacity:1;color:var(--pri)}
+.data-table tbody tr{border-bottom:1px solid var(--div);transition:background .12s;cursor:pointer}
+.data-table tbody tr:last-child{border-bottom:none}
+.data-table tbody tr:hover{background:rgba(0,54,136,.04)}
+.data-table tbody td{padding:14px 24px;vertical-align:middle}
+.td-p{font-weight:500;color:var(--pri);font-size:14px}
+.td-m{color:var(--sec);font-size:12px}
+.op-pill{display:inline-block;padding:3px 9px;border-radius:4px;font-size:12px;font-weight:500;background:#ECEFF1;color:#455A64}
+.tbl-wrap{overflow-x:auto}
+
+/* ── TABLE TOOLBAR ── */
+.tbl-bar{padding:8px 24px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--div);flex-wrap:wrap}
+.srch{display:flex;align-items:center;gap:8px;height:40px;border:1px solid var(--div);border-radius:4px;padding:0 12px;background:#FAFAFA;width:300px;transition:border-color .2s,box-shadow .2s}
+.srch:focus-within{border-color:var(--pri);box-shadow:0 0 0 1px var(--pri);background:#fff}
+.srch .material-icons{font-size:20px;color:var(--sec)}
+.srch input{border:none;background:transparent;outline:none;font-family:'Roboto',sans-serif;font-size:14px;color:var(--on-surf);width:100%}
+.srch input::placeholder{color:var(--sec)}
+.tbl-foot{padding:8px 24px;display:flex;align-items:center;justify-content:flex-end;gap:20px;border-top:1px solid var(--div);font-size:12px;color:var(--sec)}
+.pag-btn{width:32px;height:32px;border-radius:50%;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--sec);transition:background .15s}
+.pag-btn:hover{background:rgba(0,54,136,.08);color:var(--pri)}
+.pag-btn .material-icons{font-size:20px}
+
+/* ── APP BAR ── */
+.app-bar{background:var(--pri);height:var(--bar);display:flex;align-items:center;padding:0 8px 0 4px;gap:4px;position:fixed;top:0;left:0;right:0;z-index:200;box-shadow:var(--s2)}
+.app-bar-title{color:#fff;font-size:20px;font-weight:500;flex:1;padding-left:8px}
+.ib{width:40px;height:40px;border-radius:50%;border:none;background:transparent;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s;flex-shrink:0}
+.ib:hover{background:rgba(255,255,255,.14)}
+.ib .material-icons{font-size:24px}
+.bar-user{display:flex;align-items:center;gap:8px;color:#fff;cursor:pointer;padding:6px 10px;border-radius:4px;transition:background .15s}
+.bar-user:hover{background:rgba(255,255,255,.12)}
+.av{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500;color:#fff}
+.bar-un{font-size:14px;font-weight:500}
+.app-body{margin-top:var(--bar);flex:1;padding:28px 24px 100px;max-width:1280px;width:100%;align-self:center}
+
+/* ── BREADCRUMB ── */
+.bc{display:flex;align-items:center;gap:4px;font-size:13px;color:var(--sec);margin-bottom:20px;flex-wrap:wrap}
+.bc a{color:var(--pri);text-decoration:none;cursor:pointer}.bc a:hover{text-decoration:underline}
+.bc .material-icons{font-size:16px;color:var(--sec)}
+
+/* ── PAGE HEADING ── */
+.pg-hd{margin-bottom:24px}
+.pg-hd h1{font-size:24px;font-weight:400}
+.pg-hd p{font-size:14px;color:var(--sec);margin-top:4px}
+
+/* ── LOGIN ── */
+#login-screen{background:#F0F2F5;align-items:stretch}
+.login-bar{background:var(--pri);height:var(--bar);display:flex;align-items:center;padding:0 24px;gap:14px;box-shadow:var(--s2);flex-shrink:0}
+.login-bar-title{color:#fff;font-size:20px;font-weight:500}
+.login-body{flex:1;display:flex;align-items:center;justify-content:center;padding:48px 24px}
+.login-card{background:var(--surf);border-radius:4px;box-shadow:var(--s4);width:100%;max-width:400px;overflow:hidden}
+.login-top{background:var(--pri);padding:28px 28px 22px}
+.login-top h1{font-size:24px;font-weight:400;color:#fff}
+.login-top p{font-size:13px;color:rgba(255,255,255,.72);margin-top:5px}
+.login-body2{padding:28px}
+.err-ban{display:none;align-items:flex-start;gap:10px;background:#FFEBEE;border-left:4px solid var(--err);padding:12px 14px;border-radius:0 4px 4px 0;margin-bottom:20px;font-size:13px;color:var(--err)}
+.err-ban.show{display:flex}
+.err-ban .material-icons{font-size:20px;flex-shrink:0;margin-top:1px}
+
+/* ── FAB ── */
+.fab{position:fixed;bottom:28px;right:28px;height:48px;padding:0 20px;border-radius:24px;background:var(--acc);color:#fff;border:none;box-shadow:var(--s4);display:flex;align-items:center;gap:8px;cursor:pointer;font-family:'Roboto',sans-serif;font-size:14px;font-weight:500;letter-spacing:.089em;text-transform:uppercase;transition:box-shadow .2s,background .2s;z-index:99}
+.fab:hover{background:#b81c19;box-shadow:var(--s8)}
+.fab .material-icons{font-size:20px}
+
+/* ── DIALOG ── */
+.scrim{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;align-items:center;justify-content:center}
+.scrim.open{display:flex}
+.dlg{background:var(--surf);border-radius:4px;box-shadow:var(--s8);width:620px;max-width:96vw;max-height:92vh;overflow-y:auto;animation:su .22s ease}
+.dlg-wide{width:720px}
+@keyframes su{from{transform:translateY(16px);opacity:0}to{transform:translateY(0);opacity:1}}
+.dlg-title{padding:22px 24px 18px;font-size:20px;font-weight:500;border-bottom:1px solid var(--div);display:flex;align-items:center;justify-content:space-between}
+.dlg-body{padding:20px 24px}
+.dlg-act{padding:8px 16px 14px;display:flex;justify-content:flex-end;gap:8px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:0 20px}
+.form-row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0 16px}
+
+/* ── SNACKBAR ── */
+.snackbar{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#323232;color:#fff;padding:14px 24px;border-radius:4px;font-size:14px;box-shadow:var(--s4);z-index:999;transition:transform .28s cubic-bezier(.4,0,.2,1);display:flex;align-items:center;gap:12px;pointer-events:none}
+.snackbar.show{transform:translateX(-50%) translateY(0)}
+.snackbar .material-icons{font-size:20px;color:#69F0AE}
+
+/* ── INFO ROW (detail pane) ── */
+.info-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px 24px;padding:20px 24px}
+.info-item label{font-size:11px;font-weight:500;color:var(--sec);text-transform:uppercase;letter-spacing:.08em;display:block;margin-bottom:4px}
+.info-item span{font-size:14px;color:var(--on-surf)}
+
+/* ── CALENDAR ── */
+.cal-wrap{padding:16px 24px 20px}
+.cal-nav{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.cal-nav span{font-size:15px;font-weight:500;flex:1;text-align:center}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.cal-day-hd{text-align:center;font-size:11px;font-weight:500;color:var(--sec);padding:4px 0;text-transform:uppercase}
+.cal-day{min-height:52px;border-radius:4px;background:#fafafa;border:1px solid var(--div);padding:4px 5px;font-size:11px}
+.cal-day .day-num{font-weight:500;font-size:12px;color:var(--sec);display:block;margin-bottom:2px}
+.cal-day.today{border-color:var(--pri);background:var(--pri-light)}
+.cal-day.today .day-num{color:var(--pri)}
+.cal-day.empty{background:transparent;border-color:transparent}
+.trip-tag{display:block;border-radius:2px;padding:1px 4px;font-size:10px;font-weight:500;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tt-mf{background:#E3F2FD;color:#1565C0}
+.tt-sa{background:#F3E5F5;color:#6A1B9A}
+.tt-su{background:#FFF8E1;color:#E65100}
+
+/* ── EMPTY STATE ── */
+.empty{padding:48px 24px;text-align:center;color:var(--sec)}
+.empty .material-icons{font-size:48px;color:#BDBDBD;display:block;margin:0 auto 12px}
+.empty p{font-size:14px}
+
+/* ── SCHEDULE FILE DROPZONE ── */
+.dropzone{border:2px dashed var(--div);border-radius:4px;padding:32px 24px;text-align:center;color:var(--sec);transition:border-color .2s,background .2s;cursor:pointer;margin-top:8px}
+.dropzone:hover,.dropzone.over{border-color:var(--pri);background:var(--pri-light)}
+.dropzone .material-icons{font-size:40px;color:#BDBDBD;display:block;margin:0 auto 10px}
+.dropzone p{font-size:14px;margin-bottom:6px}
+.dropzone span{font-size:12px}
+.file-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--div)}
+.file-row:last-child{border-bottom:none}
+.file-row .material-icons{font-size:20px;color:var(--pri)}
+.file-row .fn{flex:1;font-size:13px}
+.file-row .fs{font-size:12px;color:var(--sec)}
+
+/* ── VALIDATION RESULT ── */
+.val-success{background:#E8F5E9;border-left:4px solid #43A047;padding:14px 16px;border-radius:0 4px 4px 0;display:flex;align-items:center;gap:10px;font-size:13px;color:#2E7D32}
+.val-fail{background:#FFEBEE;border-left:4px solid #EF5350;padding:14px 16px;border-radius:0 4px 4px 0;display:flex;align-items:center;gap:10px;font-size:13px;color:#C62828}
+.val-ing{background:#E3F2FD;border-left:4px solid #1E88E5;padding:14px 16px;border-radius:0 4px 4px 0;display:flex;align-items:center;gap:10px;font-size:13px;color:#1565C0}
+
+/* ── SEND TO OPERATOR ── */
+.recipient-list{border:1px solid var(--div);border-radius:4px;overflow:hidden}
+.recipient-row{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--div);cursor:pointer;transition:background .12s}
+.recipient-row:last-child{border-bottom:none}
+.recipient-row:hover{background:rgba(0,54,136,.04)}
+.recipient-row input[type=checkbox]{accent-color:var(--pri);width:18px;height:18px;flex-shrink:0}
+.recipient-row .rname{font-size:14px;font-weight:500}
+.recipient-row .remail{font-size:12px;color:var(--sec)}
+
+/* ── DIVIDER ── */
+.dv{height:1px;background:var(--div);margin:0}
+
+/* ── TABS ── */
+.tabs{display:flex;border-bottom:1px solid var(--div);padding:0 24px}
+.tab{padding:14px 16px;font-size:14px;font-weight:500;color:var(--sec);cursor:pointer;border-bottom:2px solid transparent;transition:color .15s,border-color .15s;letter-spacing:.01em}
+.tab:hover{color:var(--on-surf)}
+.tab.active{color:var(--pri);border-bottom-color:var(--pri)}
+
+/* ── PROGRESS STEPS ── */
+.steps{display:flex;align-items:center;padding:16px 24px;gap:0}
+.step{display:flex;align-items:center;flex:1;min-width:0}
+.step-circle{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500;flex-shrink:0}
+.step-circle.done{background:var(--pri);color:#fff}
+.step-circle.current{background:#fff;border:2px solid var(--pri);color:var(--pri)}
+.step-circle.todo{background:#fff;border:2px solid var(--div);color:var(--sec)}
+.step-label{font-size:12px;margin-left:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.step-label.done{color:var(--pri);font-weight:500}
+.step-label.current{color:var(--on-surf);font-weight:500}
+.step-label.todo{color:var(--sec)}
+.step-line{flex:1;height:2px;margin:0 8px;min-width:16px}
+.step-line.done{background:var(--pri)}
+.step-line.todo{background:var(--div)}
+
+@media(max-width:600px){
+  .form-row,.form-row3{grid-template-columns:1fr}
+  .bar-un{display:none}
+  .app-body{padding:16px}
+  .data-table thead th,.data-table tbody td{padding:10px 14px}
+  .tbl-bar{padding:8px 14px}
+}
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════
+     SCREEN: LOGIN
+════════════════════════════════ -->
+<div id="s-login" class="screen active">
+  <div class="login-bar">
+    <svg width="38" height="38" viewBox="0 0 44 44"><circle cx="22" cy="22" r="20" fill="#DC241F"/><rect x="2" y="17" width="40" height="10" fill="#003688"/><text x="22" y="25.5" text-anchor="middle" fill="#fff" font-size="7" font-weight="700" font-family="Roboto,sans-serif">TfL</text></svg>
+    <span class="login-bar-title">Collaboration Portal</span>
+  </div>
+  <div class="login-body">
+    <div class="login-card">
+      <div class="login-top">
+        <h1>Sign in</h1>
+        <p>Transport for London — Collaboration Portal</p>
+      </div>
+      <div class="login-body2">
+        <div class="err-ban" id="login-err">
+          <span class="material-icons">error_outline</span>
+          <span id="login-err-msg">Please enter your username and password.</span>
+        </div>
+        <div class="tf">
+          <input type="text" id="uname" placeholder=" " autocomplete="username"/>
+          <label>Username</label>
+        </div>
+        <div class="tf">
+          <input type="password" id="pwd" placeholder=" " autocomplete="current-password"/>
+          <label>Password</label>
+        </div>
+        <button class="btn btn-p" style="width:100%;margin-top:4px" onclick="doLogin()">Sign in</button>
+        <div style="text-align:center;margin-top:14px">
+          <button class="btn btn-t" style="font-size:13px;text-transform:none;letter-spacing:0" onclick="toast('Password reset link sent to your registered email address.')">Forgot password?</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════
+     SHARED APP BAR (reused via JS show/hide)
+     Each screen renders its own — simpler for prototype
+════════════════════════════════ -->
+
+<!-- ════════════════════════════════
+     SCREEN: DASHBOARD
+════════════════════════════════ -->
+<div id="s-dash" class="screen">
+  <header class="app-bar">
+    <button class="ib"><span class="material-icons">menu</span></button>
+    <svg width="34" height="34" viewBox="0 0 44 44" style="flex-shrink:0"><circle cx="22" cy="22" r="20" fill="#DC241F"/><rect x="2" y="17" width="40" height="10" fill="#003688"/><text x="22" y="25.5" text-anchor="middle" fill="#fff" font-size="7" font-weight="700" font-family="Roboto,sans-serif">TfL</text></svg>
+    <span class="app-bar-title">Collaboration Portal</span>
+    <button class="ib" onclick="toast('Notifications — coming soon')" title="Notifications"><span class="material-icons">notifications_none</span></button>
+    <button class="ib" onclick="toast('Help — coming soon')" title="Help"><span class="material-icons">help_outline</span></button>
+    <div class="bar-user" onclick="toast('Profile — coming soon')">
+      <div class="av">SM</div><span class="bar-un">Sarah Mitchell</span>
+      <span class="material-icons" style="font-size:18px;opacity:.7">arrow_drop_down</span>
+    </div>
+    <button class="ib" onclick="doLogout()" title="Sign out"><span class="material-icons">logout</span></button>
+  </header>
+  <main class="app-body">
+    <div class="pg-hd">
+      <h1>Dashboard</h1>
+      <p>Monitoring &amp; Implementation: Data &nbsp;·&nbsp; <strong id="d-count">12</strong> routes assigned</p>
+    </div>
+    <div class="card">
+      <div class="card-hd">
+        <div>
+          <div class="card-title">Routes <span class="chip" id="d-chip">12</span></div>
+          <div class="card-sub">All routes currently assigned to your account</div>
+        </div>
+        <button class="btn btn-a" onclick="openScDialog()"><span class="material-icons">add</span>New Service Change</button>
+      </div>
+      <div class="tbl-bar">
+        <div class="srch">
+          <span class="material-icons">search</span>
+          <input type="text" placeholder="Search routes, operators, termini…" id="d-search" oninput="filterRoutes()"/>
+        </div>
+        <span style="margin-left:auto;font-size:12px;color:var(--sec)" id="d-showing">Showing 12 of 12</span>
+      </div>
+      <div class="tbl-wrap">
+        <table class="data-table">
+          <thead><tr>
+            <th onclick="sortRoutes(0)"><span class="thi">Route<span class="material-icons si" id="rsi0">unfold_more</span></span></th>
+            <th onclick="sortRoutes(1)"><span class="thi">Operator<span class="material-icons si" id="rsi1">unfold_more</span></span></th>
+            <th onclick="sortRoutes(2)"><span class="thi">Start Terminus<span class="material-icons si" id="rsi2">unfold_more</span></span></th>
+            <th onclick="sortRoutes(3)"><span class="thi">End Terminus<span class="material-icons si" id="rsi3">unfold_more</span></span></th>
+            <th onclick="sortRoutes(4)"><span class="thi">Last Modified<span class="material-icons si" id="rsi4">unfold_more</span></span></th>
+            <th>Status</th>
+          </tr></thead>
+          <tbody id="d-tbody"></tbody>
+        </table>
+      </div>
+      <div class="tbl-foot">
+        <span>Rows per page: 12</span>
+        <span id="d-pag">1–12 of 12</span>
+        <div style="display:flex;gap:2px">
+          <button class="pag-btn"><span class="material-icons">chevron_left</span></button>
+          <button class="pag-btn"><span class="material-icons">chevron_right</span></button>
+        </div>
+      </div>
+    </div>
+  </main>
+  <button class="fab" onclick="openScDialog()"><span class="material-icons">add</span>New Service Change</button>
+</div>
+
+<!-- ════════════════════════════════
+     SCREEN: ROUTE DETAILS
+════════════════════════════════ -->
+<div id="s-route" class="screen">
+  <header class="app-bar">
+    <button class="ib" onclick="go('s-dash')"><span class="material-icons">arrow_back</span></button>
+    <svg width="34" height="34" viewBox="0 0 44 44" style="flex-shrink:0"><circle cx="22" cy="22" r="20" fill="#DC241F"/><rect x="2" y="17" width="40" height="10" fill="#003688"/><text x="22" y="25.5" text-anchor="middle" fill="#fff" font-size="7" font-weight="700" font-family="Roboto,sans-serif">TfL</text></svg>
+    <span class="app-bar-title" id="r-bar-title">Route Details</span>
+    <button class="ib" onclick="toast('Notifications — coming soon')"><span class="material-icons">notifications_none</span></button>
+    <div class="bar-user" onclick="toast('Profile — coming soon')"><div class="av">SM</div><span class="bar-un">Sarah Mitchell</span></div>
+    <button class="ib" onclick="doLogout()"><span class="material-icons">logout</span></button>
+  </header>
+  <main class="app-body">
+    <div class="bc">
+      <a onclick="go('s-dash')">Dashboard</a>
+      <span class="material-icons">chevron_right</span>
+      <span id="r-bc-route">Route 25</span>
+    </div>
+    <div class="pg-hd">
+      <h1 id="r-heading">Route 25 — Oxford Circus to Ilford</h1>
+      <p id="r-subheading">Arriva London</p>
+    </div>
+
+    <!-- Route Info Card -->
+    <div class="card">
+      <div class="card-hd">
+        <div><div class="card-title">Route Information</div></div>
+      </div>
+      <div class="info-grid" id="r-info-grid"></div>
+    </div>
+
+    <!-- Route Schedule Calendar -->
+    <div class="card">
+      <div class="card-hd">
+        <div>
+          <div class="card-title">Route Schedule</div>
+          <div class="card-sub">Trip types scheduled per day — current period</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <button class="ib" style="color:var(--pri);background:transparent;border:none" onclick="calPrev()"><span class="material-icons" style="font-size:20px;color:var(--sec)">chevron_left</span></button>
+          <span style="font-size:14px;font-weight:500;min-width:130px;text-align:center" id="cal-label">May 2025</span>
+          <button class="ib" style="color:var(--pri);background:transparent;border:none" onclick="calNext()"><span class="material-icons" style="font-size:20px;color:var(--sec)">chevron_right</span></button>
+        </div>
+      </div>
+      <div class="cal-wrap">
+        <div class="cal-grid" id="cal-grid-hd">
+          <div class="cal-day-hd">Mon</div><div class="cal-day-hd">Tue</div><div class="cal-day-hd">Wed</div>
+          <div class="cal-day-hd">Thu</div><div class="cal-day-hd">Fri</div>
+          <div class="cal-day-hd">Sat</div><div class="cal-day-hd">Sun</div>
+        </div>
+        <div class="cal-grid" id="cal-grid"></div>
+        <div style="display:flex;gap:12px;padding:12px 0 4px;flex-wrap:wrap">
+          <span style="font-size:12px;display:flex;align-items:center;gap:5px"><span class="trip-tag tt-mf" style="display:inline-block">Mon–Fri</span> Weekday service</span>
+          <span style="font-size:12px;display:flex;align-items:center;gap:5px"><span class="trip-tag tt-sa" style="display:inline-block">Sat</span> Saturday service</span>
+          <span style="font-size:12px;display:flex;align-items:center;gap:5px"><span class="trip-tag tt-su" style="display:inline-block">Sun</span> Sunday service</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Service Changes Card -->
+    <div class="card">
+      <div class="card-hd">
+        <div>
+          <div class="card-title">Service Changes <span class="chip" id="sc-count-chip">3</span></div>
+          <div class="card-sub">Associated service changes for this route</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--sec);cursor:pointer">
+            <input type="checkbox" id="show-deleted" onchange="renderScTable()" style="accent-color:var(--pri)"> Show archived
+          </label>
+          <button class="btn btn-a btn-sm" onclick="openScDialog()"><span class="material-icons" style="font-size:16px">add</span>New Service Change</button>
+        </div>
+      </div>
+      <div class="tbl-bar">
+        <div class="srch">
+          <span class="material-icons">search</span>
+          <input type="text" placeholder="Search service changes…" id="sc-search" oninput="renderScTable()"/>
+        </div>
+      </div>
+      <div class="tbl-wrap">
+        <table class="data-table">
+          <thead><tr>
+            <th>Route</th><th>SC Ref</th><th>Implementation Date</th>
+            <th>Route Spec Name</th><th>Type</th><th>Status</th><th>Description</th>
+          </tr></thead>
+          <tbody id="sc-tbody"></tbody>
+        </table>
+      </div>
+      <div class="tbl-foot">
+        <span id="sc-foot">3 service changes</span>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ════════════════════════════════
+     SCREEN: SERVICE CHANGE DETAILS
+════════════════════════════════ -->
+<div id="s-sc" class="screen">
+  <header class="app-bar">
+    <button class="ib" onclick="go('s-route')"><span class="material-icons">arrow_back</span></button>
+    <svg width="34" height="34" viewBox="0 0 44 44" style="flex-shrink:0"><circle cx="22" cy="22" r="20" fill="#DC241F"/><rect x="2" y="17" width="40" height="10" fill="#003688"/><text x="22" y="25.5" text-anchor="middle" fill="#fff" font-size="7" font-weight="700" font-family="Roboto,sans-serif">TfL</text></svg>
+    <span class="app-bar-title">Service Change Details</span>
+    <button class="ib" onclick="toast('Notifications — coming soon')"><span class="material-icons">notifications_none</span></button>
+    <div class="bar-user" onclick="toast('Profile — coming soon')"><div class="av">SM</div><span class="bar-un">Sarah Mitchell</span></div>
+    <button class="ib" onclick="doLogout()"><span class="material-icons">logout</span></button>
+  </header>
+  <main class="app-body">
+    <div class="bc">
+      <a onclick="go('s-dash')">Dashboard</a>
+      <span class="material-icons">chevron_right</span>
+      <a onclick="go('s-route')" id="sc-bc-route">Route 25</a>
+      <span class="material-icons">chevron_right</span>
+      <span id="sc-bc-ref">SC-001</span>
+    </div>
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;gap:16px;flex-wrap:wrap">
+      <div class="pg-hd" style="margin-bottom:0">
+        <h1 id="sc-heading">Route 25 — Stop Sequence Update</h1>
+        <p id="sc-sub">Route 25 · Arriva London</p>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <span id="sc-status-chip" class="sc sc-pending">Pending</span>
+        <button class="btn btn-o btn-sm" onclick="openEditSc()"><span class="material-icons">edit</span>Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="confirmAbandon()"><span class="material-icons">cancel</span>Abandon</button>
+      </div>
+    </div>
+
+    <!-- SC Info Card -->
+    <div class="card">
+      <div class="card-hd"><div class="card-title">Service Change Details</div></div>
+      <div class="info-grid" id="sc-info-grid"></div>
+    </div>
+
+    <!-- Service Requests Card -->
+    <div class="card">
+      <div class="card-hd">
+        <div>
+          <div class="card-title">Service Requests <span class="chip" id="sr-count-chip">2</span></div>
+          <div class="card-sub">Service requests created from Novus for this service change</div>
+        </div>
+      </div>
+      <div id="sc-sr-empty" class="empty" style="display:none">
+        <span class="material-icons">info_outline</span>
+        <p>No service requests yet. Go into Novus to create service requests for this service change.</p>
+      </div>
+      <div id="sc-sr-table-wrap">
+        <div class="tbl-bar">
+          <div class="srch"><span class="material-icons">search</span><input type="text" placeholder="Search service requests…" id="sr-search" oninput="renderSrTable()"/></div>
+        </div>
+        <div class="tbl-wrap">
+          <table class="data-table">
+            <thead><tr>
+              <th>Name / Title</th><th>Due Date</th><th>SC Ref</th>
+              <th>Route</th><th>Operator</th><th>Status</th><th>Last Updated</th><th></th>
+            </tr></thead>
+            <tbody id="sr-tbody"></tbody>
+          </table>
+        </div>
+        <div class="tbl-foot"><span id="sr-foot">2 service requests</span></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ════════════════════════════════
+     SCREEN: SERVICE REQUEST DETAILS
+════════════════════════════════ -->
+<div id="s-sr" class="screen">
+  <header class="app-bar">
+    <button class="ib" onclick="go('s-sc')"><span class="material-icons">arrow_back</span></button>
+    <svg width="34" height="34" viewBox="0 0 44 44" style="flex-shrink:0"><circle cx="22" cy="22" r="20" fill="#DC241F"/><rect x="2" y="17" width="40" height="10" fill="#003688"/><text x="22" y="25.5" text-anchor="middle" fill="#fff" font-size="7" font-weight="700" font-family="Roboto,sans-serif">TfL</text></svg>
+    <span class="app-bar-title">Service Request Details</span>
+    <button class="ib" onclick="toast('Notifications — coming soon')"><span class="material-icons">notifications_none</span></button>
+    <div class="bar-user" onclick="toast('Profile — coming soon')"><div class="av">SM</div><span class="bar-un">Sarah Mitchell</span></div>
+    <button class="ib" onclick="doLogout()"><span class="material-icons">logout</span></button>
+  </header>
+  <main class="app-body">
+    <div class="bc">
+      <a onclick="go('s-dash')">Dashboard</a>
+      <span class="material-icons">chevron_right</span>
+      <a onclick="go('s-route')" id="sr-bc-route">Route 25</a>
+      <span class="material-icons">chevron_right</span>
+      <a onclick="go('s-sc')" id="sr-bc-sc">SC-001</a>
+      <span class="material-icons">chevron_right</span>
+      <span id="sr-bc-name">SR-001</span>
+    </div>
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;gap:16px;flex-wrap:wrap">
+      <div class="pg-hd" style="margin-bottom:0">
+        <h1 id="sr-heading">Stop Sequence — Route 25</h1>
+        <p id="sr-sub">SC-001 · Route 25 · Arriva London</p>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <span id="sr-status-chip" class="sc sc-pending">Pending</span>
+        <button class="btn btn-o btn-sm" onclick="openEditSr()"><span class="material-icons">edit</span>Edit</button>
+        <button class="btn btn-p btn-sm" onclick="openSendDialog()"><span class="material-icons">send</span>Send to Operator</button>
+      </div>
+    </div>
+
+    <!-- SR Details Card -->
+    <div class="card">
+      <div class="card-hd"><div class="card-title">Service Request Details</div></div>
+      <div class="info-grid" id="sr-info-grid"></div>
+      <div class="dv"></div>
+      <div style="padding:16px 24px">
+        <div style="font-size:13px;font-weight:500;color:var(--sec);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Message to Operator</div>
+        <div id="sr-message" style="font-size:14px;line-height:1.6;color:var(--on-surf)">Please review the attached stop sequence file and return a validated MDV schedule file. Implementation date is 01/09/2025.</div>
+      </div>
+    </div>
+
+    <!-- Schedule File Card -->
+    <div class="card" id="sr-file-card">
+      <div class="card-hd">
+        <div><div class="card-title">Schedule File</div><div class="card-sub" id="sr-file-sub">No schedule file uploaded yet</div></div>
+        <div id="sr-file-actions" style="display:flex;gap:8px"></div>
+      </div>
+      <div id="sr-file-body" style="padding:16px 24px"></div>
+    </div>
+
+    <!-- Documents Card -->
+    <div class="card">
+      <div class="card-hd">
+        <div>
+          <div class="card-title">Documents <span class="chip" id="doc-chip">5</span></div>
+          <div class="card-sub">Schedule header files and attachments</div>
+        </div>
+        <button class="btn btn-o btn-sm" onclick="toast('File upload — coming soon in wired build')"><span class="material-icons">upload</span>Upload</button>
+      </div>
+      <div class="tbl-bar">
+        <div class="srch"><span class="material-icons">search</span><input type="text" placeholder="Search documents…" oninput="filterDocs(this.value)"/></div>
+      </div>
+      <div class="tbl-wrap">
+        <table class="data-table">
+          <thead><tr>
+            <th>File Name</th><th>Uploaded By</th><th>Operator</th><th>Date Added</th><th></th>
+          </tr></thead>
+          <tbody id="doc-tbody"></tbody>
+        </table>
+      </div>
+      <div class="tbl-foot"><span id="doc-foot">5 documents</span></div>
+    </div>
+  </main>
+</div>
+
+<!-- ════════════════════════════════
+     DIALOGS
+════════════════════════════════ -->
+
+<!-- Create / Edit Service Change -->
+<div class="scrim" id="d-sc-dialog">
+  <div class="dlg">
+    <div class="dlg-title"><span id="sc-dlg-title">Create Service Change</span></div>
+    <div class="dlg-body">
+      <div class="form-row">
+        <div class="tf fl"><input type="text" id="f-title" placeholder=" "/><label>Title *</label></div>
+        <div class="tf">
+          <select id="f-type" onchange="onType()">
+            <option value="">Select type…</option>
+            <option value="stop">Stop Sequence Change</option>
+            <option value="timetable">Timetable Change</option>
+            <option value="diversion">Diversion</option>
+            <option value="tender">New Tender</option>
+            <option value="withdrawal">Service Withdrawal</option>
+          </select>
+          <label>Type *</label>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="tf">
+          <select id="f-route" onchange="onFRoute()">
+            <option value="">Select route…</option>
+            <option value="25|Arriva London">25 — Oxford Circus → Ilford</option>
+            <option value="73|Arriva London">73 — Victoria → Stoke Newington</option>
+            <option value="38|Arriva London">38 — Victoria → Clapton Pond</option>
+            <option value="N25|Arriva London">N25 — Oxford Circus → Ilford</option>
+            <option value="8|Go-Ahead London">8 — Bow Church → Tottenham Court Rd</option>
+            <option value="55|Go-Ahead London">55 — Oxford Circus → Hackney Wick</option>
+            <option value="48|Go-Ahead London">48 — Walthamstow Central → London Bridge</option>
+            <option value="15|Tower Transit">15 — Trafalgar Square → Blackwall</option>
+            <option value="N15|Tower Transit">N15 — Trafalgar Square → Romford</option>
+            <option value="205|Metroline">205 — Paddington → Bow</option>
+            <option value="390|Metroline">390 — Archway → Notting Hill Gate</option>
+            <option value="X26|Metrobus">X26 — Croydon → Heathrow Airport</option>
+            <option value="UNKNOWN|UNKNOWN">UNKNOWN (New Tender)</option>
+          </select>
+          <label>Route *</label>
+        </div>
+        <div class="tf fl"><input type="text" id="f-op" placeholder=" " readonly/><label>Operator</label></div>
+      </div>
+      <div class="form-row">
+        <div class="tf fl"><input type="date" id="f-impl" placeholder=" "/><label>Implementation Date *</label></div>
+        <div class="tf fl"><input type="date" id="f-end" placeholder=" "/><label>End Date</label></div>
+      </div>
+      <div class="tf fl"><textarea id="f-desc" placeholder=" "></textarea><label>Description</label></div>
+      <div class="tf fl"><textarea id="f-add" rows="2" placeholder=" "></textarea><label>Additional Info</label></div>
+    </div>
+    <div class="dlg-act">
+      <button class="btn btn-t" onclick="closeScDlg()">Cancel</button>
+      <button class="btn btn-p" onclick="submitSc()">Create</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Service Request -->
+<div class="scrim" id="d-sr-dialog">
+  <div class="dlg">
+    <div class="dlg-title">Edit Service Request</div>
+    <div class="dlg-body">
+      <div class="tf fl"><input type="text" id="sr-f-title" placeholder=" " value="Stop Sequence — Route 25"/><label>Title *</label></div>
+      <div class="form-row">
+        <div class="tf fl"><input type="date" id="sr-f-due" placeholder=" " value="2025-08-15"/><label>Due Date</label></div>
+        <div class="tf fl"><input type="text" id="sr-f-scref" placeholder=" " value="SC-001" readonly/><label>Service Change Ref</label></div>
+      </div>
+      <div class="tf fl"><textarea id="sr-f-desc" placeholder=" ">Stop sequence change for Route 25 to reflect new stop at Stratford City bus station.</textarea><label>Description</label></div>
+      <div class="tf fl"><textarea id="sr-f-msg" rows="3" placeholder=" ">Please review the attached stop sequence file and return a validated MDV schedule file. Implementation date is 01/09/2025.</textarea><label>Message to Operator</label></div>
+    </div>
+    <div class="dlg-act">
+      <button class="btn btn-t" onclick="closeDlg('d-sr-dialog')">Cancel</button>
+      <button class="btn btn-p" onclick="closeDlg('d-sr-dialog');toast('Service request updated.')">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Send to Operator -->
+<div class="scrim" id="d-send-dialog">
+  <div class="dlg dlg-wide">
+    <div class="dlg-title">Send to Operator</div>
+    <div class="dlg-body">
+      <p style="font-size:13px;color:var(--sec);margin-bottom:16px">Select the operator user accounts to send this service request to. At least one recipient is required before sending.</p>
+      <div class="tf">
+        <select id="send-op-filter" onchange="filterRecipients()">
+          <option value="">All operators</option>
+          <option value="Arriva London">Arriva London</option>
+          <option value="Go-Ahead London">Go-Ahead London</option>
+          <option value="Tower Transit">Tower Transit</option>
+          <option value="Metroline">Metroline</option>
+        </select>
+        <label>Filter by Operator</label>
+      </div>
+      <div class="recipient-list" id="recipient-list"></div>
+      <div style="margin-top:12px;font-size:12px;color:var(--sec)" id="recip-selected-count">0 recipients selected</div>
+      <div class="tf fl" style="margin-top:16px">
+        <textarea id="send-msg" rows="3" placeholder=" ">Please review the attached stop sequence file and return a validated MDV schedule file by the due date.</textarea>
+        <label>Message (optional)</label>
+      </div>
+    </div>
+    <div class="dlg-act">
+      <button class="btn btn-t" onclick="closeDlg('d-send-dialog')">Cancel</button>
+      <button class="btn btn-p" onclick="submitSend()"><span class="material-icons">send</span>Send</button>
+    </div>
+  </div>
+</div>
+
+<!-- Abandon Confirm -->
+<div class="scrim" id="d-abandon">
+  <div class="dlg" style="width:420px">
+    <div class="dlg-title">Abandon Service Change?</div>
+    <div class="dlg-body">
+      <p style="font-size:14px;line-height:1.6">This will archive the service change and change its status to <strong>Deleted</strong>. It will be hidden from the list unless you toggle "Show archived". This action cannot be undone.</p>
+    </div>
+    <div class="dlg-act">
+      <button class="btn btn-t" onclick="closeDlg('d-abandon')">Cancel</button>
+      <button class="btn" style="background:var(--err);color:#fff" onclick="doAbandon()">Abandon</button>
+    </div>
+  </div>
+</div>
+
+<!-- Snackbar -->
+<div class="snackbar" id="sb"><span class="material-icons">check_circle</span><span id="sb-txt"></span></div>
+
+<script>
+// ════════════ DATA ════════════
+const ROUTES = [
+  {r:'25', op:'Arriva London',   from:'Oxford Circus',       to:'Ilford',             mod:'2025-05-14',disp:'14 May 2025',st:'pending'},
+  {r:'73', op:'Arriva London',   from:'Victoria',            to:'Stoke Newington',    mod:'2025-05-12',disp:'12 May 2025',st:'complete'},
+  {r:'38', op:'Arriva London',   from:'Victoria',            to:'Clapton Pond',       mod:'2025-05-09',disp:'09 May 2025',st:'pending'},
+  {r:'N25',op:'Arriva London',   from:'Oxford Circus',       to:'Ilford',             mod:'2025-05-07',disp:'07 May 2025',st:'complete'},
+  {r:'8',  op:'Go-Ahead London', from:'Bow Church',          to:'Tottenham Court Rd', mod:'2025-05-06',disp:'06 May 2025',st:'pending'},
+  {r:'55', op:'Go-Ahead London', from:'Oxford Circus',       to:'Hackney Wick',       mod:'2025-05-05',disp:'05 May 2025',st:'complete'},
+  {r:'48', op:'Go-Ahead London', from:'Walthamstow Central', to:'London Bridge',      mod:'2025-05-02',disp:'02 May 2025',st:'pending'},
+  {r:'15', op:'Tower Transit',   from:'Trafalgar Square',    to:'Blackwall',          mod:'2025-05-01',disp:'01 May 2025',st:'complete'},
+  {r:'N15',op:'Tower Transit',   from:'Trafalgar Square',    to:'Romford',            mod:'2025-04-29',disp:'29 Apr 2025',st:'pending'},
+  {r:'205',op:'Metroline',       from:'Paddington',          to:'Bow',                mod:'2025-04-28',disp:'28 Apr 2025',st:'complete'},
+  {r:'390',op:'Metroline',       from:'Archway',             to:'Notting Hill Gate',  mod:'2025-04-25',disp:'25 Apr 2025',st:'pending'},
+  {r:'X26',op:'Metrobus',        from:'Croydon',             to:'Heathrow Airport',   mod:'2025-04-22',disp:'22 Apr 2025',st:'complete'},
+];
+
+const SERVICE_CHANGES = [
+  {id:'SC-001',route:'25',op:'Arriva London',implDate:'01/09/2025',specName:'25 Stop Seq v1.2',type:'Stop Sequence Change',st:'pending',  desc:'New stop at Stratford City bus station added to outbound journey.',deleted:false},
+  {id:'SC-002',route:'25',op:'Arriva London',implDate:'27/10/2025',specName:'25 Timetable Oct v2',type:'Timetable Change',   st:'complete',desc:'Sunday frequency reduced from 12 to 15 minute headway.',deleted:false},
+  {id:'SC-003',route:'25',op:'Arriva London',implDate:'12/01/2026',specName:'25 Diversion Jan 26',type:'Diversion',          st:'pending',  desc:'Temporary diversion via Aldgate due to Crossrail works.',deleted:false},
+  {id:'SC-004',route:'25',op:'Arriva London',implDate:'03/03/2025',specName:'25 Minor Amend Mar',  type:'Stop Sequence Change',st:'complete',desc:'Minor stop timing adjustment at Mile End.',deleted:true},
+];
+
+const SERVICE_REQUESTS = [
+  {id:'SR-001',title:'Stop Sequence — Route 25',scRef:'SC-001',route:'25',op:'Arriva London',due:'15/08/2025',st:'waiting',   updated:'09 May 2025'},
+  {id:'SR-002',title:'Timetable Outline — Route 25',scRef:'SC-001',route:'25',op:'Arriva London',due:'20/08/2025',st:'pending', updated:'07 May 2025'},
+];
+
+const DOCUMENTS = [
+  {name:'StopSeq_R25_v1.2.mdv',  by:'John Smith',   op:'Arriva London', date:'09 May 2025 14:32'},
+  {name:'TimetableOutline_R25.xlsx',by:'Sue Thompson',op:'Arriva London',date:'08 May 2025 10:15'},
+  {name:'RouteMap_25_May25.pdf',  by:'Peter Andrews', op:'',             date:'07 May 2025 09:48'},
+  {name:'StopSeq_R25_v1.1.mdv',  by:'Sally Roberts', op:'Arriva London', date:'06 May 2025 16:20'},
+  {name:'SpecHeader_SC001.xml',   by:'John McAvoy',   op:'',             date:'05 May 2025 11:05'},
+];
+
+const RECIPIENTS = [
+  {id:1,name:'James Carter',   email:'j.carter@arrivabus.co.uk',   op:'Arriva London',  sel:false},
+  {id:2,name:'Lisa Hammond',   email:'l.hammond@arrivabus.co.uk',  op:'Arriva London',  sel:false},
+  {id:3,name:'Marcus Webb',    email:'m.webb@goahead.co.uk',       op:'Go-Ahead London',sel:false},
+  {id:4,name:'Priya Shah',     email:'p.shah@goahead.co.uk',       op:'Go-Ahead London',sel:false},
+  {id:5,name:'Tom Griffiths',  email:'t.griffiths@towertransit.co.uk',op:'Tower Transit',sel:false},
+  {id:6,name:'Claire Nguyen',  email:'c.nguyen@metroline.co.uk',   op:'Metroline',      sel:false},
+];
+
+const DESC_TMPL = {
+  stop:      'This service change relates to a stop sequence modification. Please review the updated stop order and provide a revised schedule file reflecting the agreed changes.',
+  timetable: 'This service change relates to a timetable amendment. Please review the revised departure times and return an updated schedule file for validation.',
+  diversion: 'This service change relates to a temporary or permanent route diversion. Please review the revised routing and provide an updated schedule file.',
+  tender:    'This service change relates to a new tender exercise. Please review the route specification and submit your proposed schedule file in MDV or VDV format.',
+  withdrawal:'This service change relates to a planned service withdrawal. Please confirm the final date of operation and return all required documentation.',
+};
+
+// ════════════ STATE ════════════
+let currentRoute = null;
+let currentSc = null;
+let currentSr = null;
+let calYear = 2025, calMonth = 4; // 0-indexed
+let rSortCol=-1, rSortAsc=true;
+
+// ════════════ NAV ════════════
+function go(screenId) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(screenId).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function doLogin() {
+  const u=document.getElementById('uname').value.trim();
+  const p=document.getElementById('pwd').value.trim();
+  const err=document.getElementById('login-err');
+  if(!u||!p){document.getElementById('login-err-msg').textContent='Please enter your username and password.';err.classList.add('show');return;}
+  err.classList.remove('show');
+  go('s-dash');
+  renderDashboard();
+}
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&document.getElementById('s-login').classList.contains('active'))doLogin();});
+
+function doLogout(){
+  go('s-login');
+  document.getElementById('uname').value='';
+  document.getElementById('pwd').value='';
+}
+
+// ════════════ DASHBOARD ════════════
+function renderDashboard(data) {
+  const d = data || [...ROUTES];
+  document.getElementById('d-tbody').innerHTML = d.map(r=>`
+    <tr onclick="openRoute('${r.r}')">
+      <td class="td-p">${r.r}</td>
+      <td><span class="op-pill">${r.op}</span></td>
+      <td>${r.from}</td><td>${r.to}</td>
+      <td class="td-m">${r.disp}</td>
+      <td><span class="sc sc-${r.st}">${cap(r.st)}</span></td>
+    </tr>`).join('');
+  document.getElementById('d-chip').textContent=d.length;
+  document.getElementById('d-count').textContent=d.length;
+  document.getElementById('d-showing').textContent=`Showing ${d.length} of ${ROUTES.length}`;
+  document.getElementById('d-pag').textContent=`1–${d.length} of ${d.length}`;
+}
+
+function filterRoutes(){
+  const q=document.getElementById('d-search').value.toLowerCase();
+  let d=q?ROUTES.filter(r=>[r.r,r.op,r.from,r.to,r.st].some(v=>v.toLowerCase().includes(q))):[...ROUTES];
+  if(rSortCol>=0){const k=['r','op','from','to','mod','st'][rSortCol];d.sort((a,b)=>rSortAsc?a[k].localeCompare(b[k]):b[k].localeCompare(a[k]));}
+  renderDashboard(d);
+}
+
+function sortRoutes(col){
+  if(rSortCol===col)rSortAsc=!rSortAsc;else{rSortCol=col;rSortAsc=true;}
+  for(let i=0;i<6;i++){const e=document.getElementById('rsi'+i);if(e){e.textContent='unfold_more';e.classList.remove('active');}}
+  const e=document.getElementById('rsi'+col);if(e){e.textContent=rSortAsc?'arrow_upward':'arrow_downward';e.classList.add('active');}
+  filterRoutes();
+}
+
+// ════════════ ROUTE DETAILS ════════════
+function openRoute(routeNum) {
+  currentRoute = ROUTES.find(r=>r.r===routeNum) || ROUTES[0];
+  document.getElementById('r-bar-title').textContent=`Route ${currentRoute.r}`;
+  document.getElementById('r-bc-route').textContent=`Route ${currentRoute.r}`;
+  document.getElementById('r-heading').textContent=`Route ${currentRoute.r} — ${currentRoute.from} to ${currentRoute.to}`;
+  document.getElementById('r-subheading').textContent=currentRoute.op;
+  document.getElementById('r-info-grid').innerHTML=infoGrid([
+    ['Route Number',currentRoute.r],['Operator',currentRoute.op],
+    ['Start Terminus',currentRoute.from],['End Terminus',currentRoute.to],
+    ['Last Modified',currentRoute.disp],['Status',`<span class="sc sc-${currentRoute.st}">${cap(currentRoute.st)}</span>`],
+  ]);
+  renderCalendar();
+  renderScTable();
+  go('s-route');
+}
+
+// ════════════ CALENDAR ════════════
+function renderCalendar(){
+  const months=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  document.getElementById('cal-label').textContent=months[calMonth]+' '+calYear;
+  const first=new Date(calYear,calMonth,1).getDay(); // 0=Sun
+  const startOffset=(first===0)?6:first-1; // Monday start
+  const days=new Date(calYear,calMonth+1,0).getDate();
+  const today=new Date();
+  let html='';
+  for(let i=0;i<startOffset;i++) html+=`<div class="cal-day empty"></div>`;
+  for(let d=1;d<=days;d++){
+    const date=new Date(calYear,calMonth,d);
+    const dow=date.getDay(); // 0=Sun,6=Sat
+    const isToday=today.getDate()===d&&today.getMonth()===calMonth&&today.getFullYear()===calYear;
+    let tags='';
+    if(dow>=1&&dow<=5) tags+=`<span class="trip-tag tt-mf">Mon–Fri</span>`;
+    if(dow===6) tags+=`<span class="trip-tag tt-sa">Sat</span>`;
+    if(dow===0) tags+=`<span class="trip-tag tt-su">Sun</span>`;
+    html+=`<div class="cal-day${isToday?' today':''}"><span class="day-num">${d}</span>${tags}</div>`;
+  }
+  document.getElementById('cal-grid').innerHTML=html;
+}
+function calPrev(){if(calMonth===0){calMonth=11;calYear--;}else calMonth--;renderCalendar();}
+function calNext(){if(calMonth===11){calMonth=0;calYear++;}else calMonth++;renderCalendar();}
+
+// ════════════ SC TABLE ════════════
+function renderScTable(){
+  const showDel=document.getElementById('show-deleted')?.checked;
+  const q=(document.getElementById('sc-search')?.value||'').toLowerCase();
+  const data=SERVICE_CHANGES.filter(s=>{
+    if(!showDel&&s.deleted) return false;
+    if(q&&![s.id,s.route,s.op,s.type,s.st,s.desc,s.specName].some(v=>v.toLowerCase().includes(q))) return false;
+    return true;
+  });
+  // Sort by implDate ascending (soonest first)
+  data.sort((a,b)=>parseDate(a.implDate)-parseDate(b.implDate));
+  document.getElementById('sc-count-chip').textContent=data.length;
+  document.getElementById('sc-foot').textContent=data.length+' service change'+(data.length!==1?'s':'');
+  document.getElementById('sc-tbody').innerHTML=data.map(s=>`
+    <tr onclick="openSc('${s.id}')">
+      <td class="td-p">${s.route}</td>
+      <td style="font-weight:500">${s.id}</td>
+      <td>${s.implDate}</td>
+      <td class="td-m">${s.specName}</td>
+      <td><span class="op-pill" style="background:#EDE7F6;color:#512DA8">${s.type}</span></td>
+      <td><span class="sc sc-${s.st}">${cap(s.st)}</span></td>
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:var(--sec)">${s.desc}</td>
+    </tr>`).join('');
+}
+
+function parseDate(d){ const p=d.split('/');return new Date(p[2],p[1]-1,p[0]);}
+
+// ════════════ SERVICE CHANGE DETAILS ════════════
+function openSc(scId){
+  currentSc=SERVICE_CHANGES.find(s=>s.id===scId)||SERVICE_CHANGES[0];
+  document.getElementById('sc-bc-route').textContent='Route '+currentSc.route;
+  document.getElementById('sc-bc-ref').textContent=currentSc.id;
+  document.getElementById('sc-heading').textContent='Route '+currentSc.route+' — '+currentSc.type;
+  document.getElementById('sc-sub').textContent='Route '+currentSc.route+' · '+currentSc.op;
+  document.getElementById('sc-status-chip').className='sc sc-'+currentSc.st;
+  document.getElementById('sc-status-chip').textContent=cap(currentSc.st);
+  document.getElementById('sc-info-grid').innerHTML=infoGrid([
+    ['Service Change Ref',currentSc.id],['Title',currentSc.specName],
+    ['Type',`<span class="op-pill" style="background:#EDE7F6;color:#512DA8">${currentSc.type}</span>`],
+    ['Route',currentSc.route],['Operator',currentSc.op],
+    ['Implementation Date',currentSc.implDate],['Status',`<span class="sc sc-${currentSc.st}">${cap(currentSc.st)}</span>`],
+    ['Description',currentSc.desc],
+  ]);
+  renderSrTable();
+  go('s-sc');
+}
+
+function renderSrTable(){
+  const q=(document.getElementById('sr-search')?.value||'').toLowerCase();
+  const data=SERVICE_REQUESTS.filter(s=>!q||[s.title,s.id,s.scRef,s.route,s.op,s.st].some(v=>v.toLowerCase().includes(q)));
+  data.sort((a,b)=>parseDate(a.due)-parseDate(b.due));
+  document.getElementById('sr-count-chip').textContent=data.length;
+  document.getElementById('sr-foot').textContent=data.length+' service request'+(data.length!==1?'s':'');
+  if(data.length===0){
+    document.getElementById('sc-sr-empty').style.display='block';
+    document.getElementById('sc-sr-table-wrap').style.display='none';
+    return;
+  }
+  document.getElementById('sc-sr-empty').style.display='none';
+  document.getElementById('sc-sr-table-wrap').style.display='block';
+  document.getElementById('sr-tbody').innerHTML=data.map(s=>`
+    <tr onclick="openSr('${s.id}')">
+      <td class="td-p">${s.title}</td>
+      <td class="td-m">${s.due}</td>
+      <td>${s.scRef}</td>
+      <td>${s.route}</td>
+      <td><span class="op-pill">${s.op}</span></td>
+      <td><span class="sc sc-${s.st}">${cap(s.st)}</span></td>
+      <td class="td-m">${s.updated}</td>
+      <td><button class="btn btn-p btn-sm" onclick="event.stopPropagation();openSendDialog()"><span class="material-icons">send</span>Send</button></td>
+    </tr>`).join('');
+}
+
+// ════════════ SERVICE REQUEST DETAILS ════════════
+function openSr(srId){
+  currentSr=SERVICE_REQUESTS.find(s=>s.id===srId)||SERVICE_REQUESTS[0];
+  document.getElementById('sr-bc-route').textContent='Route '+currentSr.route;
+  document.getElementById('sr-bc-sc').textContent=currentSr.scRef;
+  document.getElementById('sr-bc-name').textContent=currentSr.id;
+  document.getElementById('sr-heading').textContent=currentSr.title;
+  document.getElementById('sr-sub').textContent=currentSr.scRef+' · Route '+currentSr.route+' · '+currentSr.op;
+  document.getElementById('sr-status-chip').className='sc sc-'+currentSr.st;
+  document.getElementById('sr-status-chip').textContent=cap(currentSr.st);
+  document.getElementById('sr-info-grid').innerHTML=infoGrid([
+    ['Service Request Ref',currentSr.id],['Title',currentSr.title],
+    ['Service Change Ref',currentSr.scRef],['Route',currentSr.route],
+    ['Operator',currentSr.op],['Due Date',currentSr.due],
+    ['Status',`<span class="sc sc-${currentSr.st}">${cap(currentSr.st)}</span>`],
+    ['Last Updated',currentSr.updated],
+  ]);
+  renderFileCard(currentSr.st);
+  renderDocs();
+  go('s-sr');
+}
+
+function renderFileCard(status){
+  const sub=document.getElementById('sr-file-sub');
+  const body=document.getElementById('sr-file-body');
+  const acts=document.getElementById('sr-file-actions');
+  if(status==='pending'){
+    sub.textContent='No schedule file uploaded yet';
+    body.innerHTML=`<div class="dropzone" onclick="toast('File picker — will be wired in build')"><span class="material-icons">upload_file</span><p>Drop MDV or VDV file here, or click to browse</p><span>Supports .mdv, .vdv, .zip</span></div>`;
+    acts.innerHTML='';
+  } else if(status==='waiting'){
+    sub.textContent='Awaiting schedule file from operator';
+    body.innerHTML=`<div class="val-ing"><span class="material-icons">hourglass_empty</span>Waiting for the operator to upload a schedule file.</div>`;
+    acts.innerHTML='';
+  } else if(status==='validating'){
+    sub.textContent='Validation in progress…';
+    body.innerHTML=`<div class="val-ing"><span class="material-icons">sync</span>Novus is validating the uploaded schedule file. This may take a few minutes.</div>`;
+    acts.innerHTML='';
+  } else if(status==='validated'){
+    sub.textContent='Schedule file validated successfully';
+    body.innerHTML=`<div class="val-success" style="margin-bottom:12px"><span class="material-icons">check_circle</span>The schedule file has been validated successfully by Novus.</div>
+    <div class="file-row"><span class="material-icons">description</span><span class="fn">StopSeq_R25_final.mdv</span><span class="fs">124 KB · Uploaded 09 May 2025 14:32</span></div>`;
+    acts.innerHTML=`<button class="btn btn-o btn-sm" onclick="toast('Warning report downloaded.')"><span class="material-icons">download</span>Report</button>
+    <button class="btn btn-o btn-sm" onclick="toast('Schedule file downloaded.')"><span class="material-icons">download</span>File</button>`;
+  } else if(status==='failed'){
+    sub.textContent='Schedule file validation failed';
+    body.innerHTML=`<div class="val-fail" style="margin-bottom:12px"><span class="material-icons">error</span>Validation failed. Please review the error report, resolve the issues, and upload a corrected file.</div>
+    <div class="file-row"><span class="material-icons" style="color:var(--err)">description</span><span class="fn">StopSeq_R25_v1.1.mdv</span><span class="fs">118 KB · Uploaded 07 May 2025 11:20</span></div>`;
+    acts.innerHTML=`<button class="btn btn-o btn-sm" onclick="toast('Error report downloaded.')"><span class="material-icons">download</span>Error Report</button>
+    <button class="btn btn-a btn-sm" onclick="toast('File picker — will be wired in build')"><span class="material-icons">upload</span>Replace File</button>`;
+  }
+}
+
+// ════════════ DOCUMENTS ════════════
+function renderDocs(filter){
+  const data=filter?DOCUMENTS.filter(d=>d.name.toLowerCase().includes(filter)||d.by.toLowerCase().includes(filter)):DOCUMENTS;
+  document.getElementById('doc-chip').textContent=data.length;
+  document.getElementById('doc-foot').textContent=data.length+' document'+(data.length!==1?'s':'');
+  document.getElementById('doc-tbody').innerHTML=data.map(d=>`
+    <tr>
+      <td><span style="display:flex;align-items:center;gap:8px"><span class="material-icons" style="font-size:18px;color:var(--pri)">description</span>${d.name}</span></td>
+      <td>${d.by}</td>
+      <td>${d.op?`<span class="op-pill">${d.op}</span>`:''}</td>
+      <td class="td-m">${d.date}</td>
+      <td><button class="btn btn-t btn-sm" onclick="toast('${d.name} downloaded.')"><span class="material-icons">download</span></button></td>
+    </tr>`).join('');
+}
+function filterDocs(q){renderDocs(q.toLowerCase());}
+
+// ════════════ DIALOGS ════════════
+function openScDialog(){document.getElementById('d-sc-dialog').classList.add('open');}
+function closeScDlg(){document.getElementById('d-sc-dialog').classList.remove('open');}
+function closeDlg(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.scrim').forEach(s=>s.addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');}));
+
+function onFRoute(){const v=document.getElementById('f-route').value;document.getElementById('f-op').value=v?v.split('|')[1]:'';}
+function onType(){const v=document.getElementById('f-type').value;if(DESC_TMPL[v])document.getElementById('f-desc').value=DESC_TMPL[v];}
+
+function submitSc(){
+  if(!document.getElementById('f-title').value.trim()||!document.getElementById('f-route').value||!document.getElementById('f-impl').value||!document.getElementById('f-type').value){toast('Please complete all required fields.');return;}
+  closeScDlg();
+  toast('Service Change created successfully.');
+}
+
+function openEditSc(){
+  document.getElementById('sc-dlg-title').textContent='Edit Service Change';
+  if(currentSc){
+    document.getElementById('f-title').value=currentSc.specName;
+    document.getElementById('f-op').value=currentSc.op;
+    document.getElementById('f-desc').value=currentSc.desc;
+  }
+  openScDialog();
+}
+
+function openEditSr(){document.getElementById('d-sr-dialog').classList.add('open');}
+
+function confirmAbandon(){document.getElementById('d-abandon').classList.add('open');}
+function doAbandon(){
+  if(currentSc){currentSc.st='abandoned';currentSc.deleted=true;}
+  closeDlg('d-abandon');
+  toast('Service change abandoned and archived.');
+  go('s-route');
+  renderScTable();
+}
+
+// ════════════ SEND TO OPERATOR ════════════
+function openSendDialog(){
+  RECIPIENTS.forEach(r=>r.sel=false);
+  renderRecipients();
+  document.getElementById('d-send-dialog').classList.add('open');
+}
+
+function renderRecipients(){
+  const f=document.getElementById('send-op-filter').value;
+  const list=f?RECIPIENTS.filter(r=>r.op===f):RECIPIENTS;
+  document.getElementById('recipient-list').innerHTML=list.map(r=>`
+    <div class="recipient-row" onclick="toggleRecip(${r.id})">
+      <input type="checkbox" ${r.sel?'checked':''} onclick="event.stopPropagation();toggleRecip(${r.id})">
+      <div><div class="rname">${r.name}</div><div class="remail">${r.email} · <span class="op-pill" style="font-size:11px">${r.op}</span></div></div>
+    </div>`).join('');
+  const sel=RECIPIENTS.filter(r=>r.sel).length;
+  document.getElementById('recip-selected-count').textContent=sel+' recipient'+(sel!==1?'s':'')+' selected';
+}
+
+function toggleRecip(id){const r=RECIPIENTS.find(r=>r.id===id);if(r)r.sel=!r.sel;renderRecipients();}
+function filterRecipients(){renderRecipients();}
+
+function submitSend(){
+  const sel=RECIPIENTS.filter(r=>r.sel);
+  if(!sel.length){toast('Please select at least one recipient.');return;}
+  closeDlg('d-send-dialog');
+  if(currentSr){currentSr.st='waiting';document.getElementById('sr-status-chip').className='sc sc-waiting';document.getElementById('sr-status-chip').textContent='Waiting';}
+  renderFileCard('waiting');
+  toast(`Service request sent to ${sel.length} recipient${sel.length!==1?'s':''}.`);
+}
+
+// ════════════ UTILS ════════════
+function infoGrid(pairs){
+  return pairs.map(([l,v])=>`<div class="info-item"><label>${l}</label><span>${v}</span></div>`).join('');
+}
+function cap(s){return s.charAt(0).toUpperCase()+s.slice(1);}
+
+let sbTimer;
+function toast(msg){
+  const sb=document.getElementById('sb');
+  document.getElementById('sb-txt').textContent=msg;
+  sb.classList.add('show');
+  clearTimeout(sbTimer);
+  sbTimer=setTimeout(()=>sb.classList.remove('show'),3500);
+}
+
+// ════════════ INIT ════════════
+renderDashboard();
+</script>
+</body>
+</html>

@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TfL Collaboration Portal</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="portal.css">
+</head>
+<body>
+
+<!-- ════════════════════════════════
+     SCREEN: LOGIN
+════════════════════════════════ -->
+<div id="s-login" class="screen active">
+  <div class="login-bar">
+    <span class="login-bar-title">Collaboration Portal</span>
+  </div>
+  <div class="login-body">
+    <div class="login-card">
+      <div class="login-top">
+        <h1>Sign in</h1>
+        <p>Transport for London — Collaboration Portal</p>
+      </div>
+      <div class="login-body2">
+        <div class="err-ban" id="login-err">
+          <span class="material-icons">error_outline</span>
+          <span id="login-err-msg">Please enter your username and password.</span>
+        </div>
+        <div class="tf">
+          <input type="text" id="uname" placeholder=" " autocomplete="username"/>
+          <label>Username</label>
+        </div>
+        <div class="tf">
+          <input type="password" id="pwd" placeholder=" " autocomplete="current-password"/>
+          <label>Password</label>
+        </div>
+        <button class="btn btn-p" style="width:100%;margin-top:4px" onclick="doLogin()">Sign in</button>
+        <div style="text-align:center;margin-top:14px">
+          <button class="btn btn-t" style="font-size:13px;text-transform:none;letter-spacing:0" onclick="toast('Password reset link sent to your registered email address.')">Forgot password?</button>
+        </div>
+        <div class="demo-accts">
+          <div class="demo-accts-hd" onclick="toggleDemoAccounts()">
+            <span class="material-icons">info_outline</span>Demo accounts
+          </div>
+          <div id="demo-list">
+            <strong style="display:block;margin-bottom:6px;color:var(--on-surf)">Use any password with these usernames:</strong>
+            <code>tfl</code> — Service Change Creator<br>
+            <code>tendering</code> — Tendering Team (sees tender submissions)<br>
+            <code>readonly</code> — Read-Only User<br>
+            <code>operator</code> — Operator Portal (Arriva London)
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════
+     SCREEN: DASHBOARD
+════════════════════════════════ -->
+<div id="s-dash" class="screen">
+  <header class="app-bar">
+    <button class="ib"><span class="material-icons">menu</span></button>
+    <span class="app-bar-title">Collaboration Portal</span>
+    <button class="ib" onclick="toast('Notifications — coming soon')" title="Notifications"><span class="material-icons">notifications_none</span></button>
+    <button class="ib" onclick="toast('Help — coming soon')" title="Help"><span class="material-icons">help_outline</span></button>
+    <div class="bar-user" onclick="toast('Profile — coming soon')">
+      <div class="av">TU</div>
+      <span class="bar-un">TfL User</span>
+      <span class="material-icons" style="font-size:18px;opacity:.7">arrow_drop_down</span>
+    </div>
+    <button class="ib" onclick="doLogout()" title="Sign out"><span class="material-icons">logout</span></button>
+  </header>
+  <main class="app-body">
+    <div class="pg-hd">
+      <h1>Dashboard</h1>
+      <p>Monitoring &amp; Implementation: Data &nbsp;·&nbsp; <strong id="d-count">12</strong> routes assigned</p>
+    </div>
+    <div class="card">
+      <div class="card-hd">
+        <div>
+          <div class="card-title">Routes <span class="chip" id="d-chip">12</span></div>
+          <div class="card-sub">All routes currently assigned to your account</div>
+        </div>
+      </div>
+      <div class="tbl-bar">
+        <div class="srch">
+          <span class="material-icons">search</span>
+          <input type="text" placeholder="Search routes, operators, termini…" id="d-search" oninput="filterRoutes()"/>
+        </div>
+        <span style="margin-left:auto;font-size:12px;color:var(--sec)" id="d-showing">Showing 12 of 12</span>
+      </div>
+      <div class="tbl-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th onclick="sortRoutes(0)"><span class="thi">Route<span class="material-icons si" id="rsi0">unfold_more</span></span></th>
+              <th onclick="sortRoutes(1)"><span class="thi">Operator<span class="material-icons si" id="rsi1">unfold_more</span></span></th>
+              <th onclick="sortRoutes(2)"><span class="thi">Start Terminus<span class="material-icons si" id="rsi2">unfold_more</span></span></th>
+              <th onclick="sortRoutes(3)"><span class="thi">End Terminus<span class="material-icons si" id="rsi3">unfold_more</span></span></th>
+              <th onclick="sortRoutes(4)"><span class="thi">Last Modified<span class="material-icons si" id="rsi4">unfold_more</span></span></th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="d-tbody"></tbody>
+        </table>
+      </div>
+      <div class="tbl-foot">
+        <span>Rows per page: 12</span>
+        <span id="d-pag">1–12 of 12</span>
+        <div style="display:flex;gap:2px">
+          <button class="pag-btn"><span class="material-icons">chevron_left</span></button>
+          <button class="pag-btn"><span class="material-icons">chevron_right</span></button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ════════════════════════════════
+     SCREEN: ROUTE DETAILS
+════════════════════════════════ -->
+<div id="s-route" class="screen">
+  <header class="app-bar">
+    <button class="ib" onclick="go(currentUserRole === 'operator' ? 's-operator' : 's-dash')"><span class="material-icons">arrow_back</span></button>
+    <span class="app-bar-title" id="r-bar-title">Route Details</span>
+    <button class="ib" onclick="toast('Notifications — coming soon')"><span class="material-icons">notifications_none</span></button>
+    <div class="bar-user" onclick="toast('Profile — coming soon')"><div class="av">TU</div><span class="bar-un">TfL User</span></div>
+    <button class="ib" onclick="doLogout()"><span class="material-icons">logout</span></button>
+  </header>
+  <main class="app-body">
+    <div class="bc">
+      <a onclick="go(currentUserRole === 'operator' ? 's-operator' : 's-dash')">Dashboard</a>
+      <span class="material-icons">chevron_right</span>
+      <span id="r-bc-route">Route 25</span>
+    </div>
+    <div class="pg-hd">
+      <h1 id="r-heading">Route 25 — Oxford Circus to Ilford</h1>
+      <p id="r-subheading">Arriva London</p>
+    </div>
+
+    <!-- Route Info Card -->
+    <div class="card">
+      <div class="card-hd">
+        <div><div class="card-title">Route Information</div></div>
+      </div>
+      <div class="info-grid" id="r-info-grid"></div>
+    </div>
+
+    <!-- Route Schedule Calendar -->
+    <div class="card">
+      <div class="card-hd">
+        <div>
+          <div class="card-title">Route Schedule</div>
+          <div class="card-sub">Trip types scheduled per day — current period</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <button class="ib" onclick="calPrev()"><span class="material-icons" style="font-size:20px;color:var(--sec)">chevron_left</span></button>
+          <span style="font-size:14px;font-weight:500;min-width:130px;text-align:center" id="cal-label">May 2025</span>
+          <button class="ib" onclick="calNext()"><span class="material-icons" style="font-size:20px;color:var(--sec)">chevron_right</span></button>
+        </div>
+      </div>
+      <div class="cal-wrap">
+        <div class="cal-grid" id="cal-grid-hd">
+          <div class="cal-day-hd">Mon</div>
+          <div class="cal-day-hd">Tue</div>
+          <div class="cal-day-hd">Wed</div>
+          <div class="cal-day-hd">Thu</div>
+          <div class="cal-day-hd">Fri</div>
+          <div class="cal-day-hd">Sat</div>
+          <div class="cal-day-hd">Sun</div>
+        </div>
+        <div class="cal-grid" id="cal-grid"></div>
+        <div style="display:flex;gap:12px;padding:12px 0 4px;flex-wrap:wrap">
+          <span style="font-size:12px;display:flex;align-items:center;gap:5px"><span class="trip-tag tt-mf" style="display:inline-block">Mon–Fri</span> Weekday service</span>
+          <span style="font-size:12px;display:flex;align-items:center;gap:5px"><span class="trip-tag tt-sa" style="display:inline-block">Sat</span> Saturday service</span>
+          <span style="font-size:12px;display:flex;align-items:center;gap:5px"><span class="trip-tag tt-su" style="display:inline-block">Sun</span> Sunday service</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Service Changes Card -->
+    <div class="card">
+      <div class="card-hd">
+        <div>
+          <div class="card-title">Service Changes <span class="chip" id="sc-count-chip">3</span></div>
+          <div class="card-sub">Associated service changes for this route</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--sec);cursor:pointer">
+            <input type="checkbox" id="show-deleted" onchange="renderScTable()" style="accent-color:var(--pri)"> Show archived
+          </label>
+        </div>
+      </div>
+      <!-- Tender active alert — shown when route has open tender SCs -->
+      <div id="sc-tender-active-ban" class="tender-table-ban" style="display:none">
+        <span class="material-icons">gavel</span>
+        <span id="sc-tender-active-text"></span>
+        <span style="margin-left:auto;font-size:12px;font-weight:400;color:var(--sec)">Tendering Team only</span>
+      </div>
+
+      <div class="tbl-bar">
+        <div class="srch">
+          <span class="material-icons">search</span>
+          <input type="text" placeholder="Search service changes…" id="sc-search" oninput="renderScTable()"/>
+        </div>
+      </div>
+      <div class="tbl-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Route</th>
+              <th>SC Ref</th>
+              <th>Implementation Date</th>
+              <th>Route Spec Name</th>
+              <th>Type</th>
+              <th>Status</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody id="sc-tbody"></tbody>
+        </table>
+      </div>
+      <div class="tbl-foot">
+        <span id="sc-foot">3 service changes</span>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ════════════════════════════════
+     SCREEN: SERVICE CHANGE DETAILS
+════════════════════════════════ -->
+<div id="s-sc" class="screen">
+  <header class="app-bar">
+    <button class="ib" onclick="go(scBackTarget)"><span class="material-icons">arrow_back</span></button>
+    <span class="app-bar-title">Service Change Details</span>
+    <button class="ib" onclick="toast('Notifications — coming soon')"><span class="material-icons">notifications_none</span></button>
+    <div class="bar-user" onclick="toast('Profile — coming soon')"><div class="av">TU</div><span class="bar-un">TfL User</span></div>
+    <button class="ib" onclick="doLogout()"><span class="material-icons">logout</span></button>
+  </header>
+  <main class="app-body">
+    <div class="bc">
+      <a onclick="go(currentUserRole === 'operator' ? 's-operator' : 's-dash')">Dashboard</a>
+      <span class="material-icons">chevron_right</span>
+      <a onclick="go('s-route')" id="sc-bc-route">Route 25</a>
+      <span class="material-icons">chevron_right</span>
+      <span id="sc-bc-ref">SC-001</span>
+    </div>
+    <!-- Tender page banner — shown only for New Tender SCs -->
+    <div id="sc-tender-ban" class="tender-page-ban" style="display:none">
+      <span class="material-icons">gavel</span>
+      <div>
+        <strong>TENDER SUBMISSION</strong>
+        <span id="sc-tender-ban-sub"></span>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;gap:16px;flex-wrap:wrap">
+      <div class="pg-hd" style="margin-bottom:0">
+        <h1 id="sc-heading">Route 25 — Stop Sequence Update</h1>
+        <p id="sc-sub">Route 25 · Arriva London</p>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <span id="sc-status-chip" class="sc sc-pending">Pending</span>
+        <button class="btn btn-o btn-sm" id="sc-edit-btn" onclick="openEditSc()"><span class="material-icons">edit</span>Edit</button>
+        <button id="sc-award-btn" class="btn btn-sm" style="display:none;background:#E65100;color:#fff;border:none" onclick="openAwardDialog(currentSc.id)"><span class="material-icons">emoji_events</span>Award Tender</button>
+        <button class="btn btn-o btn-sm" id="sc-dl-spec-btn" style="display:none" onclick="toast('Specification header downloaded.')"><span class="material-icons">download</span>Download Spec</button>
+        <button class="btn btn-danger btn-sm" id="sc-abandon-btn" onclick="confirmAbandon()"><span class="material-icons">cancel</span>Abandon</button>
+      </div>
+    </div>
+
+    <!-- SC Info Card -->
+    <div class="card">
+      <div class="card-hd"><div class="card-title">Service Change Details</div></div>
+      <div class="info-grid" id="sc-info-grid"></div>
+    </div>
+
+    <!-- Schedule Submission Card (service request layer collapsed to SC level — TfL workflow) -->
+    <div class="card" id="sc-submission-card" style="display:none">
+      <div class="sr-collapsed-banner">
+        <span class="material-icons">layers</span>
+        Service request surfaced at service change level — TfL workflow
+        <span id="sc-sub-sr-ref" class="sr-ref-badge"></span>
+      </div>
+      <div class="card-hd">
+        <div>
+          <div class="card-title">Schedule Submission</div>
+          <div class="card-sub">Operator submission for this service change</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <span id="sc-sub-status-chip" class="sc sc-pending">Pending</span>
+          <button class="btn btn-o btn-sm" id="sc-sub-edit-btn" onclick="openEditSr()"><span class="material-icons">edit</span>Edit</button>
+          <button class="btn btn-p btn-sm" id="sc-sub-send-btn" onclick="openSendDialog()"><span class="material-icons">send</span>Send to Operator</button>
+          <button class="btn btn-p btn-sm" id="sc-sub-upload-btn" style="display:none" onclick="operatorUploadFile()"><span class="material-icons">upload</span>Upload File</button>
+        </div>
+      </div>
+      <div id="sc-sub-empty" class="empty" style="display:none">
+        <span class="material-icons">info_outline</span>
+        <p>No service request yet. Create one in Novus to begin the submission workflow.</p>
+      </div>
+      <div id="sc-sub-content">
+        <div class="info-grid" id="sc-sub-info-grid"></div>
+        <div class="dv"></div>
+        <div style="padding:16px 24px">
+          <div style="font-size:11px;font-weight:500;color:var(--sec);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Message to Operator</div>
+          <div id="sc-sub-message" style="font-size:14px;line-height:1.6;color:var(--on-surf)"></div>
+        </div>
+        <div class="dv"></div>
+        <div style="padding:12px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--div);background:#fafafa">
+          <div>
+            <div style="font-size:11px;font-weight:500;color:var(--sec);text-transform:uppercase;letter-spacing:.08em">Schedule File</div>
+            <div style="font-size:12px;color:var(--sec);margin-top:2px" id="sc-sub-file-sub"></div>
+          </div>
+          <div id="sc-sub-file-actions" style="display:flex;gap:8px"></div>
+        </div>
+        <div id="sc-sub-file-body" style="padding:16px 24px"></div>
+        <div class="dv"></div>
+        <div style="padding:12px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--div);background:#fafafa">
+          <div style="font-size:11px;font-weight:500;color:var(--sec);text-transform:uppercase;letter-spacing:.08em">
+            Documents <span class="chip" id="sc-doc-chip" style="font-size:11px;height:20px;padding:0 8px;vertical-align:middle">0</span>
+          </div>
+          <button class="btn btn-o btn-sm" id="sc-doc-upload-btn" onclick="toast('File upload — coming soon in wired build')"><span class="material-icons">upload</span>Upload</button>
+        </div>
+        <div class="tbl-bar">
+          <div class="srch">
+            <span class="material-icons">search</span>
+            <input type="text" placeholder="Search documents…" oninput="filterInlineDocs(this.value)"/>
+          </div>
+        </div>
+        <div class="tbl-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>File Name</th>
+                <th>Uploaded By</th>
+                <th>Operator</th>
+                <th>Date Added</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="sc-doc-tbody"></tbody>
+          </table>
+        </div>
+        <div class="tbl-foot"><span id="sc-doc-foot">0 documents</span></div>
+      </div>
+    </div>
+
+    <!-- Internal-only Banner (shown for Curtailment Addition / Administrative Change) -->
+    <div class="card" id="sc-internal-ban" style="display:none">
+      <div class="info-ban">
+        <span class="material-icons">lock_outline</span>
+        <div>
+          <strong>Internal change — no operator notification required</strong>
+          This service change type does not require operator file submission. The change is recorded for audit and reference purposes only. No service request will be sent.
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ════════════════════════════════
+     SCREEN: SERVICE REQUEST DETAILS
+════════════════════════════════ -->
+<div id="s-sr" class="screen">
+  <header class="app-bar">
+    <button class="ib" onclick="go('s-sc')"><span class="material-icons">arrow_back</span></button>
+    <span class="app-bar-title">Service Request Details</span>
+    <button class="ib" onclick="toast('Notifications — coming soon')"><span class="material-icons">notifications_none</span></button>
+    <div class="bar-user" onclick="toast('Profile — coming soon')"><div class="av">TU</div><span class="bar-un">TfL User</span></div>
+    <button class="ib" onclick="doLogout()"><span class="material-icons">logout</span></button>
+  </header>
+  <main class="app-body">
+    <div class="bc">
+      <a onclick="go('s-dash')">Dashboard</a>
+      <span class="material-icons">chevron_right</span>
+      <a onclick="go('s-route')" id="sr-bc-route">Route 25</a>
+      <span class="material-icons">chevron_right</span>
+      <a onclick="go('s-sc')" id="sr-bc-sc">SC-001</a>
+      <span class="material-icons">chevron_right</span>
+      <span id="sr-bc-name">SR-001</span>
+    </div>
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;gap:16px;flex-wrap:wrap">
+      <div class="pg-hd" style="margin-bottom:0">
+        <h1 id="sr-heading">Stop Sequence — Route 25</h1>
+        <p id="sr-sub">SC-001 · Route 25 · Arriva London</p>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <span id="sr-status-chip" class="sc sc-pending">Pending</span>
+        <button class="btn btn-o btn-sm" onclick="openEditSr()"><span class="material-icons">edit</span>Edit</button>
+        <button class="btn btn-p btn-sm" onclick="openSendDialog()"><span class="material-icons">send</span>Send to Operator</button>
+      </div>
+    </div>
+
+    <!-- SR Details Card -->
+    <div class="card">
+      <div class="card-hd"><div class="card-title">Service Request Details</div></div>
+      <div class="info-grid" id="sr-info-grid"></div>
+      <div class="dv"></div>
+      <div style="padding:16px 24px">
+        <div style="font-size:13px;font-weight:500;color:var(--sec);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Message to Operator</div>
+        <div id="sr-message" style="font-size:14px;line-height:1.6;color:var(--on-surf)">Please review the attached stop sequence file and return a validated MDV schedule file. Implementation date is 01/09/2025.</div>
+      </div>
+    </div>
+
+    <!-- Schedule File Card -->
+    <div class="card" id="sr-file-card">
+      <div class="card-hd">
+        <div>
+          <div class="card-title">Schedule File</div>
+          <div class="card-sub" id="sr-file-sub">No schedule file uploaded yet</div>
+        </div>
+        <div id="sr-file-actions" style="display:flex;gap:8px"></div>
+      </div>
+      <div id="sr-file-body" style="padding:16px 24px"></div>
+    </div>
+
+    <!-- Documents Card -->
+    <div class="card">
+      <div class="card-hd">
+        <div>
+          <div class="card-title">Documents <span class="chip" id="doc-chip">5</span></div>
+          <div class="card-sub">Schedule header files and attachments</div>
+        </div>
+        <button class="btn btn-o btn-sm" onclick="toast('File upload — coming soon in wired build')"><span class="material-icons">upload</span>Upload</button>
+      </div>
+      <div class="tbl-bar">
+        <div class="srch">
+          <span class="material-icons">search</span>
+          <input type="text" placeholder="Search documents…" oninput="filterDocs(this.value)"/>
+        </div>
+      </div>
+      <div class="tbl-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>File Name</th>
+              <th>Uploaded By</th>
+              <th>Operator</th>
+              <th>Date Added</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="doc-tbody"></tbody>
+        </table>
+      </div>
+      <div class="tbl-foot"><span id="doc-foot">5 documents</span></div>
+    </div>
+  </main>
+</div>
+
+<!-- ════════════════════════════════
+     DIALOGS
+════════════════════════════════ -->
+
+<!-- Create / Edit Service Change -->
+<div class="scrim" id="d-sc-dialog">
+  <div class="dlg">
+    <div class="dlg-title"><span id="sc-dlg-title">Create Service Change</span></div>
+    <div class="dlg-body">
+      <div class="form-row">
+        <div class="tf fl"><input type="text" id="f-title" placeholder=" "/><label>Title *</label></div>
+        <div class="tf">
+          <select id="f-type">
+            <option value="">Select type…</option>
+            <option value="new-schedule">New Schedule</option>
+            <option value="rerouting">Rerouting / Route Variation</option>
+            <option value="stop">Stop Sequence Change</option>
+            <option value="curtailment">Curtailment Addition</option>
+            <option value="tender">New Tender</option>
+            <option value="admin">Administrative Change</option>
+          </select>
+          <label>Type *</label>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="tf">
+          <select id="f-route" onchange="onFRoute()">
+            <option value="">Select route…</option>
+            <option value="25|Arriva London">25 — Oxford Circus → Ilford</option>
+            <option value="73|Arriva London">73 — Victoria → Stoke Newington</option>
+            <option value="38|Arriva London">38 — Victoria → Clapton Pond</option>
+            <option value="N25|Arriva London">N25 — Oxford Circus → Ilford</option>
+            <option value="8|Go-Ahead London">8 — Bow Church → Tottenham Court Rd</option>
+            <option value="55|Go-Ahead London">55 — Oxford Circus → Hackney Wick</option>
+            <option value="48|Go-Ahead London">48 — Walthamstow Central → London Bridge</option>
+            <option value="15|Tower Transit">15 — Trafalgar Square → Blackwall</option>
+            <option value="N15|Tower Transit">N15 — Trafalgar Square → Romford</option>
+            <option value="205|Metroline">205 — Paddington → Bow</option>
+            <option value="390|Metroline">390 — Archway → Notting Hill Gate</option>
+            <option value="X26|Metrobus">X26 — Croydon → Heathrow Airport</option>
+          </select>
+          <label>Route *</label>
+        </div>
+        <div class="tf fl"><input type="text" id="f-op" placeholder=" " readonly/><label>Operator</label></div>
+      </div>
+      <div class="form-row">
+        <div class="tf fl"><input type="date" id="f-impl" placeholder=" "/><label>Implementation Date *</label></div>
+        <div class="tf fl"><input type="date" id="f-end"  placeholder=" "/><label>End Date</label></div>
+      </div>
+      <div class="tf fl"><textarea id="f-desc" placeholder=" "></textarea><label>Description</label></div>
+      <div class="tf fl"><textarea id="f-add" rows="2" placeholder=" "></textarea><label>Additional Info</label></div>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--sec);margin-top:-4px;cursor:pointer">
+        <input type="checkbox" id="f-confidential" style="accent-color:var(--pri);width:16px;height:16px">
+        Confidential — restrict visibility to authorised users only
+      </label>
+    </div>
+    <div class="dlg-act">
+      <button class="btn btn-t" onclick="closeScDlg()">Cancel</button>
+      <button class="btn btn-p" onclick="submitSc()">Create</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Service Request -->
+<div class="scrim" id="d-sr-dialog">
+  <div class="dlg">
+    <div class="dlg-title">Edit Service Request</div>
+    <div class="dlg-body">
+      <div class="tf fl"><input type="text" id="sr-f-title" placeholder=" " value="Stop Sequence — Route 25"/><label>Title *</label></div>
+      <div class="form-row">
+        <div class="tf fl"><input type="date" id="sr-f-due"   placeholder=" " value="2025-08-15"/><label>Due Date</label></div>
+        <div class="tf fl"><input type="text" id="sr-f-scref" placeholder=" " value="SC-001" readonly/><label>Service Change Ref</label></div>
+      </div>
+      <div class="tf fl"><textarea id="sr-f-desc" placeholder=" ">Stop sequence change for Route 25 to reflect new stop at Stratford City bus station.</textarea><label>Description</label></div>
+      <div class="tf fl"><textarea id="sr-f-msg" rows="3" placeholder=" ">Please review the attached stop sequence file and return a validated MDV schedule file. Implementation date is 01/09/2025.</textarea><label>Message to Operator</label></div>
+    </div>
+    <div class="dlg-act">
+      <button class="btn btn-t" onclick="closeDlg('d-sr-dialog')">Cancel</button>
+      <button class="btn btn-p" onclick="closeDlg('d-sr-dialog');toast('Service request updated.')">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Send to Operator -->
+<div class="scrim" id="d-send-dialog">
+  <div class="dlg dlg-wide">
+    <div class="dlg-title">Send to Operator</div>
+    <div class="dlg-body">
+      <p style="font-size:13px;color:var(--sec);margin-bottom:16px">Select the operator user accounts to send this service request to. At least one recipient is required before sending.</p>
+      <div class="tf">
+        <select id="send-op-filter" onchange="filterRecipients()">
+          <option value="">All operators</option>
+          <option value="Arriva London">Arriva London</option>
+          <option value="Go-Ahead London">Go-Ahead London</option>
+          <option value="Tower Transit">Tower Transit</option>
+          <option value="Metroline">Metroline</option>
+        </select>
+        <label>Filter by Operator</label>
+      </div>
+      <div class="recipient-list" id="recipient-list"></div>
+      <div style="margin-top:12px;font-size:12px;color:var(--sec)" id="recip-selected-count">0 recipients selected</div>
+      <div class="tf fl" style="margin-top:16px">
+        <textarea id="send-msg" rows="3" placeholder=" ">Please review the attached stop sequence file and return a validated MDV schedule file by the due date.</textarea>
+        <label>Message (optional)</label>
+      </div>
+    </div>
+    <div class="dlg-act">
+      <button class="btn btn-t" onclick="closeDlg('d-send-dialog')">Cancel</button>
+      <button class="btn btn-p" onclick="submitSend()"><span class="material-icons">send</span>Send</button>
+    </div>
+  </div>
+</div>
+
+<!-- Abandon Confirmation -->
+<div class="scrim" id="d-abandon">
+  <div class="dlg" style="width:420px">
+    <div class="dlg-title">Abandon Service Change?</div>
+    <div class="dlg-body">
+      <p style="font-size:14px;line-height:1.6">This will archive the service change and change its status to <strong>Deleted</strong>. It will be hidden from the list unless you toggle "Show archived". This action cannot be undone.</p>
+    </div>
+    <div class="dlg-act">
+      <button class="btn btn-t" onclick="closeDlg('d-abandon')">Cancel</button>
+      <button class="btn" style="background:var(--err);color:#fff" onclick="doAbandon()">Abandon</button>
+    </div>
+  </div>
+</div>
+
+<!-- Award Tender Confirmation -->
+<div class="scrim" id="d-award">
+  <div class="dlg" style="width:460px">
+    <div class="dlg-title">Award Tender?</div>
+    <div class="dlg-body">
+      <p style="font-size:14px;line-height:1.6">Are you sure you want to award this tender to <strong id="award-op-name"></strong>?</p>
+      <p style="font-size:13px;color:var(--sec);margin-top:10px;line-height:1.6">All other submissions for this tender will be automatically closed. This action cannot be undone.</p>
+    </div>
+    <div class="dlg-act">
+      <button class="btn btn-t" onclick="closeDlg('d-award')">Cancel</button>
+      <button class="btn btn-p" onclick="doAwardTender()"><span class="material-icons">emoji_events</span>Confirm Award</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════
+     SCREEN: OPERATOR PORTAL
+════════════════════════════════ -->
+<div id="s-operator" class="screen">
+  <header class="app-bar">
+    <span class="app-bar-title">Operator Portal</span>
+    <div class="bar-user" onclick="toast('Profile — coming soon')">
+      <div class="av">OU</div>
+      <span class="bar-un">Operator User</span>
+    </div>
+    <button class="ib" onclick="doLogout()" title="Sign out"><span class="material-icons">logout</span></button>
+  </header>
+  <main class="app-body">
+    <div class="pg-hd">
+      <h1 id="op-heading">Operator Portal</h1>
+      <p id="op-sub">Arriva London</p>
+    </div>
+
+    <!-- My Routes -->
+    <div class="card">
+      <div class="card-hd">
+        <div>
+          <div class="card-title">My Routes <span class="chip" id="op-routes-chip">0</span></div>
+          <div class="card-sub">Routes assigned to your operator account</div>
+        </div>
+      </div>
+      <div class="tbl-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Route</th>
+              <th>Start Terminus</th>
+              <th>End Terminus</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="op-routes-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Schedule Submissions -->
+    <div class="card">
+      <div class="card-hd">
+        <div>
+          <div class="card-title">Schedule Submissions <span class="chip" id="op-sub-chip">0</span></div>
+          <div class="card-sub">Service changes requiring your schedule file submission — click a row to view details and upload</div>
+        </div>
+      </div>
+      <div class="tbl-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Route</th>
+              <th>SC Ref</th>
+              <th>Type</th>
+              <th>Due Date</th>
+              <th>Sub-Op Code</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="op-sub-tbody"></tbody>
+        </table>
+      </div>
+      <div class="tbl-foot">
+        <span style="font-size:12px;color:var(--sec)">Sub-operator codes are pre-assigned from Novus. Click any row to view details and upload your schedule file.</span>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Snackbar -->
+<div class="snackbar" id="sb">
+  <span class="material-icons">check_circle</span>
+  <span id="sb-txt"></span>
+</div>
+
+<script src="portal.js"></script>
+</body>
+</html>
