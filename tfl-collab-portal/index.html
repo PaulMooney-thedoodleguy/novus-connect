@@ -65,7 +65,7 @@
     <button class="ib"><span class="material-icons">menu</span></button>
     <span class="app-bar-title">Collaboration Portal</span>
     <button class="ib" onclick="toast('Notifications — coming soon')" title="Notifications"><span class="material-icons">notifications_none</span></button>
-    <button class="ib" onclick="toast('Help — coming soon')" title="Help"><span class="material-icons">help_outline</span></button>
+    <button class="ib" onclick="openHelp()" title="Help"><span class="material-icons">help_outline</span></button>
     <div class="bar-user" onclick="toast('Profile — coming soon')">
       <div class="av">TU</div>
       <span class="bar-un">TfL User</span>
@@ -127,6 +127,7 @@
     <button class="ib" onclick="go(currentUserRole === 'operator' ? 's-operator' : 's-dash')"><span class="material-icons">arrow_back</span></button>
     <span class="app-bar-title" id="r-bar-title">Route Details</span>
     <button class="ib" onclick="toast('Notifications — coming soon')"><span class="material-icons">notifications_none</span></button>
+    <button class="ib" onclick="openHelp()" title="Help"><span class="material-icons">help_outline</span></button>
     <div class="bar-user" onclick="toast('Profile — coming soon')"><div class="av">TU</div><span class="bar-un">TfL User</span></div>
     <button class="ib" onclick="doLogout()"><span class="material-icons">logout</span></button>
   </header>
@@ -238,6 +239,7 @@
     <button class="ib" onclick="go(scBackTarget)"><span class="material-icons">arrow_back</span></button>
     <span class="app-bar-title">Service Change Details</span>
     <button class="ib" onclick="toast('Notifications — coming soon')"><span class="material-icons">notifications_none</span></button>
+    <button class="ib" onclick="openHelp()" title="Help"><span class="material-icons">help_outline</span></button>
     <div class="bar-user" onclick="toast('Profile — coming soon')"><div class="av">TU</div><span class="bar-un">TfL User</span></div>
     <button class="ib" onclick="doLogout()"><span class="material-icons">logout</span></button>
   </header>
@@ -370,6 +372,7 @@
     <button class="ib" onclick="go('s-sc')"><span class="material-icons">arrow_back</span></button>
     <span class="app-bar-title">Service Request Details</span>
     <button class="ib" onclick="toast('Notifications — coming soon')"><span class="material-icons">notifications_none</span></button>
+    <button class="ib" onclick="openHelp()" title="Help"><span class="material-icons">help_outline</span></button>
     <div class="bar-user" onclick="toast('Profile — coming soon')"><div class="av">TU</div><span class="bar-un">TfL User</span></div>
     <button class="ib" onclick="doLogout()"><span class="material-icons">logout</span></button>
   </header>
@@ -601,6 +604,7 @@
 <div id="s-operator" class="screen">
   <header class="app-bar">
     <span class="app-bar-title">Operator Portal</span>
+    <button class="ib" onclick="openHelp()" title="Help"><span class="material-icons">help_outline</span></button>
     <div class="bar-user" onclick="toast('Profile — coming soon')">
       <div class="av">OU</div>
       <span class="bar-un">Operator User</span>
@@ -664,6 +668,25 @@
       </div>
     </div>
   </main>
+</div>
+
+<!-- ════════════════════════════════
+     HELP PANEL
+════════════════════════════════ -->
+<div class="help-scrim" id="help-scrim" onclick="closeHelp()"></div>
+<div class="help-panel" id="help-panel">
+  <div class="help-hd">
+    <span class="material-icons">help_outline</span>
+    <span class="title">Help &amp; Support</span>
+    <button class="ib" onclick="closeHelp()" title="Close" style="color:#fff"><span class="material-icons">close</span></button>
+  </div>
+  <div class="help-search-wrap">
+    <div class="srch" style="width:100%">
+      <span class="material-icons">search</span>
+      <input type="text" id="help-search-input" placeholder="Search help articles…" oninput="filterHelp(this.value)"/>
+    </div>
+  </div>
+  <div class="help-body" id="help-body"></div>
 </div>
 
 <!-- Snackbar -->

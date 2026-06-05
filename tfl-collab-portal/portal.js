@@ -869,6 +869,338 @@ function toast(msg) {
 }
 
 
+// ════════════ HELP ════════════
+
+const HELP_CONTENT = [
+  {
+    cat: 'Getting Started',
+    icon: 'rocket_launch',
+    articles: [
+      {
+        title: 'Signing in and user roles',
+        tags: ['login', 'sign in', 'roles', 'accounts', 'username', 'password'],
+        body: `<p>Sign in using your TfL or operator username and password. Your role controls what you can see and do:</p>
+<ul>
+  <li><strong>Service Change Creator (TfL)</strong> — create and manage service changes, send service requests to operators</li>
+  <li><strong>Tendering Team (TfL)</strong> — view tender submissions and award tenders</li>
+  <li><strong>Read-Only (TfL)</strong> — view all content, no edits or actions</li>
+  <li><strong>Operator</strong> — view assigned routes and upload schedule files</li>
+</ul>`
+      },
+      {
+        title: 'Navigating the portal',
+        tags: ['navigation', 'breadcrumb', 'back', 'menu', 'screens'],
+        body: `<p>The portal is organised as a hierarchy of screens:</p>
+<ul>
+  <li><strong>Dashboard</strong> — all routes assigned to your account</li>
+  <li><strong>Route Details</strong> — route info, schedule calendar, and service changes list</li>
+  <li><strong>Service Change Details</strong> — SC info and the schedule submission section</li>
+  <li><strong>Service Request Details</strong> — full SR details, file upload, and documents</li>
+</ul>
+<p>Use the <strong>breadcrumb trail</strong> at the top of each page or the <strong>back arrow</strong> in the app bar to navigate between screens.</p>`
+      }
+    ]
+  },
+  {
+    cat: 'Dashboard & Routes',
+    icon: 'dashboard',
+    articles: [
+      {
+        title: 'Understanding the dashboard',
+        tags: ['dashboard', 'routes', 'table', 'overview', 'home'],
+        body: `<p>The dashboard lists all routes currently assigned to your account. Each row shows:</p>
+<ul>
+  <li><strong>Route</strong> — the route number; click to open Route Details</li>
+  <li><strong>Operator</strong> — the bus operator responsible for the route</li>
+  <li><strong>Start / End Terminus</strong> — the route endpoints</li>
+  <li><strong>Last Modified</strong> — when the route record was last updated</li>
+  <li><strong>Status</strong> — Pending or Complete</li>
+</ul>`
+      },
+      {
+        title: 'Searching and sorting routes',
+        tags: ['search', 'filter', 'sort', 'find route', 'column'],
+        body: `<p>Use the <strong>search bar</strong> above the table to filter routes in real time — searches across route number, operator, terminus names, and status.</p>
+<p>Click any <strong>column header</strong> to sort by that field. Click the same header again to reverse the order. An arrow icon shows the active sort.</p>`
+      },
+      {
+        title: 'Route schedule calendar',
+        tags: ['calendar', 'schedule', 'trip types', 'weekday', 'saturday', 'sunday'],
+        body: `<p>Inside Route Details, the <strong>Route Schedule</strong> card shows a monthly calendar with the trip types running on each day:</p>
+<ul>
+  <li><strong>Mon–Fri</strong> (blue) — weekday service</li>
+  <li><strong>Sat</strong> (purple) — Saturday service</li>
+  <li><strong>Sun</strong> (amber) — Sunday service</li>
+</ul>
+<p>Use the <strong>left / right arrows</strong> to navigate between months.</p>`
+      }
+    ]
+  },
+  {
+    cat: 'Service Changes',
+    icon: 'edit_note',
+    articles: [
+      {
+        title: 'What is a service change?',
+        tags: ['service change', 'sc', 'what is', 'overview'],
+        body: `<p>A <strong>service change (SC)</strong> is a planned modification to a bus route — anything from a stop sequence update to a full new timetable.</p>
+<p>When TfL creates a SC it triggers the schedule file submission workflow: a service request is sent to the operator asking for an updated MDV file.</p>`
+      },
+      {
+        title: 'Creating a service change',
+        tags: ['create', 'new service change', 'add', 'fab'],
+        body: `<p>From the Route Details page click the <strong>+ New Service Change</strong> button (FAB at the bottom-right on some screens).</p>
+<p>Required fields:</p>
+<ul>
+  <li><strong>Title</strong> — a descriptive name for the change</li>
+  <li><strong>Type</strong> — select the most appropriate change type</li>
+  <li><strong>Route</strong> — the affected route (operator auto-fills)</li>
+  <li><strong>Implementation Date</strong> — when the change takes effect</li>
+</ul>
+<p>Tick <strong>Confidential</strong> to restrict visibility to authorised users only.</p>`
+      },
+      {
+        title: 'Service change types explained',
+        tags: ['type', 'new schedule', 'rerouting', 'stop sequence', 'curtailment', 'tender', 'administrative', 'internal'],
+        body: `<ul>
+  <li><strong>New Schedule</strong> — full new timetable; typically a frequency or timing change</li>
+  <li><strong>Rerouting / Route Variation</strong> — change to the physical path of the route</li>
+  <li><strong>Stop Sequence Change</strong> — addition, removal, or reordering of stops</li>
+  <li><strong>Curtailment Addition</strong> — short working added to the route; internal only, no operator notification</li>
+  <li><strong>Administrative Change</strong> — record correction (e.g. garage code update); internal only, no operator notification</li>
+  <li><strong>New Tender</strong> — open competition for route operation; visible to Tendering Team only</li>
+</ul>`
+      },
+      {
+        title: 'Editing a service change',
+        tags: ['edit', 'update', 'modify', 'change details'],
+        body: `<p>Open the Service Change Details page and click the <strong>Edit</strong> button. Update the fields you need and click <strong>Save</strong>.</p>
+<p>Edit is available to <strong>Service Change Creators</strong> and the <strong>Tendering Team</strong> only. Read-only users cannot edit.</p>`
+      },
+      {
+        title: 'Abandoning a service change',
+        tags: ['abandon', 'delete', 'archive', 'cancel', 'remove'],
+        body: `<p>Click the <strong>Abandon</strong> button on the Service Change Details page and confirm.</p>
+<p>Abandoned SCs move to <strong>Deleted</strong> status and are hidden from the list by default. Toggle <strong>Show archived</strong> on the Route Details page to see them.</p>
+<p>This action cannot be undone.</p>`
+      },
+      {
+        title: 'Confidential service changes',
+        tags: ['confidential', 'restricted', 'visibility', 'sensitive'],
+        body: `<p>Marking a SC as <strong>Confidential</strong> restricts its visibility to authorised users only. This is typically used for commercially sensitive changes such as tender submissions.</p>
+<p>New Tender SCs are always confidential and only visible to the Tendering Team role.</p>`
+      }
+    ]
+  },
+  {
+    cat: 'Schedule Submissions',
+    icon: 'upload_file',
+    articles: [
+      {
+        title: 'Sending a service request to an operator',
+        tags: ['send', 'service request', 'operator', 'notify', 'dispatch'],
+        body: `<p>On the Service Change Details page, click <strong>Send to Operator</strong> in the Schedule Submission section.</p>
+<ol>
+  <li>Select the operator contacts to notify (filtered by operator by default)</li>
+  <li>Edit the message to the operator if needed</li>
+  <li>Click <strong>Send</strong></li>
+</ol>
+<p>The submission status updates to <strong>Waiting</strong> once sent, indicating the portal is awaiting the operator's file upload.</p>`
+      },
+      {
+        title: 'Understanding submission status',
+        tags: ['status', 'waiting', 'validating', 'validated', 'failed', 'pending', 'submission state'],
+        body: `<ul>
+  <li><strong>Pending</strong> — service request created but not yet sent to the operator</li>
+  <li><strong>Waiting</strong> — sent to operator; awaiting schedule file upload</li>
+  <li><strong>Validating</strong> — operator has uploaded a file; Novus is running validation</li>
+  <li><strong>Validated</strong> — file passed all checks; ready for implementation</li>
+  <li><strong>Failed</strong> — file failed validation; operator must correct and re-upload</li>
+</ul>`
+      },
+      {
+        title: 'When schedule file validation fails',
+        tags: ['failed', 'validation error', 'fix', 'resubmit', 'error report', 'replace'],
+        body: `<p>If validation fails, the status changes to <strong>Failed</strong> and an error report becomes available.</p>
+<ol>
+  <li>Click <strong>Error Report</strong> to download the full error details</li>
+  <li>Share with the operator so they can correct their scheduling data</li>
+  <li>The operator (or a TfL user) clicks <strong>Replace File</strong> to upload a corrected version</li>
+  <li>Novus will re-validate automatically</li>
+</ol>`
+      },
+      {
+        title: 'Downloading a schedule file or validation report',
+        tags: ['download', 'file', 'report', 'mdv', 'export'],
+        body: `<p>Once a file is uploaded, use the action buttons in the <strong>Schedule File</strong> section:</p>
+<ul>
+  <li><strong>File</strong> — downloads the MDV schedule file</li>
+  <li><strong>Report</strong> — downloads the Novus validation report (warnings summary)</li>
+  <li><strong>Error Report</strong> — downloads full error details when validation has failed</li>
+</ul>`
+      }
+    ]
+  },
+  {
+    cat: 'New Tender Workflow',
+    icon: 'gavel',
+    articles: [
+      {
+        title: 'What is the New Tender process?',
+        tags: ['tender', 'new tender', 'bidding', 'competition', 'overview'],
+        body: `<p>When a route is due for re-tender, TfL creates a <strong>New Tender</strong> SC. Multiple operators are invited to submit competing schedule files.</p>
+<p>New Tender SCs are confidential — only the <strong>Tendering Team</strong> role can see them.</p>
+<p>Each invited operator has a separate SC record linked to the same tender group.</p>`
+      },
+      {
+        title: 'Viewing tender submissions',
+        tags: ['tender', 'submissions', 'view', 'status', 'tendering team'],
+        body: `<p>Sign in as the <strong>Tendering Team</strong> role to see New Tender SCs.</p>
+<p>On the Route Details page a <strong>yellow banner</strong> indicates when a route is in tender. The service changes table lists each operator's submission with its validation status.</p>
+<p>Click any tender row to view its full submission details.</p>`
+      },
+      {
+        title: 'Awarding a tender',
+        tags: ['award', 'winning', 'operator', 'decision', 'confirm award'],
+        body: `<p>Once an operator's submission has a <strong>Validated</strong> status, the <strong>Award Tender</strong> button appears on their SC Details page (Tendering Team only).</p>
+<ol>
+  <li>Click <strong>Award Tender</strong></li>
+  <li>Confirm the operator name in the dialog</li>
+  <li>Click <strong>Confirm Award</strong></li>
+</ol>
+<p>The system marks the winning submission as <strong>Awarded</strong> and all others as <strong>Rejected</strong>. This action cannot be undone.</p>`
+      }
+    ]
+  },
+  {
+    cat: 'Operator Portal',
+    icon: 'business',
+    articles: [
+      {
+        title: 'Viewing your assigned routes',
+        tags: ['operator', 'routes', 'my routes', 'assigned'],
+        body: `<p>After signing in as an operator, the <strong>My Routes</strong> table shows all routes assigned to your organisation.</p>
+<p>Click any route row to open its details, view associated service changes, and see submission history.</p>`
+      },
+      {
+        title: 'Uploading a schedule file',
+        tags: ['upload', 'mdv', 'vdv', 'schedule file', 'submit', 'file picker'],
+        body: `<p>When a service request shows <strong>Waiting</strong> status, you're required to upload a schedule file.</p>
+<ol>
+  <li>Click the row in the <strong>Schedule Submissions</strong> table to open the SC Details page</li>
+  <li>In the Schedule Submission section, click the upload area or <strong>Upload File</strong> button</li>
+  <li>Select your file — Novus will begin validation automatically</li>
+</ol>
+<p>Supported formats: <code>.mdv</code>, <code>.vdv</code>, <code>.zip</code></p>`
+      },
+      {
+        title: 'Tracking your submission status',
+        tags: ['operator', 'status', 'submission', 'validated', 'failed', 'track'],
+        body: `<p>Monitor progress in the <strong>Schedule Submissions</strong> table on your operator dashboard or within the SC Details page:</p>
+<ul>
+  <li><strong>Waiting</strong> — TfL is waiting for your file; action required</li>
+  <li><strong>Validating</strong> — your file is being processed by Novus (this may take a few minutes)</li>
+  <li><strong>Validated</strong> — accepted; no further action needed</li>
+  <li><strong>Failed</strong> — your file has errors; download the Error Report, fix the issues, and re-upload</li>
+</ul>`
+      }
+    ]
+  },
+  {
+    cat: 'Reference',
+    icon: 'info',
+    articles: [
+      {
+        title: 'Sub-operator codes explained',
+        tags: ['sub-operator', 'code', 'arln', 'gabs', 'ttra', 'novus', 'identifier'],
+        body: `<p>Sub-operator codes are short identifiers pre-assigned by Novus to each operator, used to tag schedule files in the validation pipeline.</p>
+<p>Examples: <code>ARLN</code> = Arriva London, <code>GABS</code> = Go-Ahead Bus Services, <code>TTRA</code> = Tower Transit.</p>
+<p>These codes are read-only in the portal — they cannot be changed here.</p>`
+      },
+      {
+        title: 'Managing documents',
+        tags: ['documents', 'files', 'upload', 'download', 'attachments', 'route map', 'spec header'],
+        body: `<p>Each service request has a <strong>Documents</strong> section for supporting files such as route maps, spec headers, and notes.</p>
+<p>Use the <strong>Upload</strong> button to attach a file. All team members with access to the SC can view and download documents.</p>
+<p>The table shows filename, uploader, operator (if applicable), and upload date and time. Use the search bar to find specific files.</p>`
+      },
+      {
+        title: 'Internal-only service changes',
+        tags: ['internal', 'curtailment', 'administrative', 'no operator', 'lock'],
+        body: `<p><strong>Curtailment Addition</strong> and <strong>Administrative Change</strong> service change types are internal to TfL. No service request is sent to the operator.</p>
+<p>These SCs display a purple <em>Internal change — no operator notification required</em> banner instead of the schedule submission section.</p>
+<p>Operator users cannot see these change types at all.</p>`
+      }
+    ]
+  }
+];
+
+function openHelp() {
+  document.getElementById('help-scrim').classList.add('open');
+  document.getElementById('help-panel').classList.add('open');
+  const inp = document.getElementById('help-search-input');
+  inp.value = '';
+  renderHelp('');
+  setTimeout(() => inp.focus(), 280);
+}
+
+function closeHelp() {
+  document.getElementById('help-scrim').classList.remove('open');
+  document.getElementById('help-panel').classList.remove('open');
+}
+
+function filterHelp(q) {
+  renderHelp(q.trim().toLowerCase());
+}
+
+function renderHelp(q) {
+  const body = document.getElementById('help-body');
+  if (!q) {
+    body.innerHTML = HELP_CONTENT.map((cat, ci) => `
+      <div class="help-cat">
+        <div class="help-cat-hd">
+          <span class="material-icons">${cat.icon}</span>${cat.cat}
+        </div>
+        ${cat.articles.map((a, ai) => helpArticleHtml(a, `${ci}-${ai}`)).join('')}
+      </div>`).join('');
+  } else {
+    const matches = [];
+    HELP_CONTENT.forEach((cat, ci) => {
+      cat.articles.forEach((a, ai) => {
+        const hay = [a.title, ...a.tags, a.body.replace(/<[^>]+>/g, '')].join(' ').toLowerCase();
+        if (hay.includes(q)) matches.push({ a, id: `${ci}-${ai}` });
+      });
+    });
+    body.innerHTML = matches.length
+      ? matches.map(({ a, id }) => helpArticleHtml(a, id)).join('')
+      : `<div class="help-empty"><span class="material-icons">search_off</span><p>No results for "<strong>${q}</strong>"</p><p style="margin-top:6px;font-size:12px">Try different keywords or browse the categories above.</p></div>`;
+  }
+}
+
+function helpArticleHtml(a, id) {
+  return `
+    <div class="help-article">
+      <div class="help-art-hd" onclick="toggleHelpArticle('ha-${id}')">
+        <span>${a.title}</span>
+        <span class="material-icons">expand_more</span>
+      </div>
+      <div class="help-art-body" id="ha-${id}">${a.body}</div>
+    </div>`;
+}
+
+function toggleHelpArticle(id) {
+  const body = document.getElementById(id);
+  const hd   = body ? body.previousElementSibling : null;
+  if (!body) return;
+  const open = body.classList.toggle('open');
+  if (hd) hd.classList.toggle('open', open);
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeHelp();
+});
+
+
 // ════════════ INIT ════════════
 
 renderDashboard();
